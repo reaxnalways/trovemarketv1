@@ -27,12 +27,16 @@ export async function updateListing(formData: FormData) {
   const rawBattery = optional(formData.get("batteryHealth"));
   const price = rawPrice === null ? null : Number(rawPrice.replace(",", "."));
   const batteryHealth = rawBattery === null ? null : Number(rawBattery);
+  const deviceRegion = optional(formData.get("deviceRegion"));
 
   if (price !== null && (!Number.isFinite(price) || price < 0)) {
     redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz fiyat.")}`);
   }
   if (batteryHealth !== null && (!Number.isInteger(batteryHealth) || batteryHealth < 0 || batteryHealth > 100)) {
     redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Pil sağlığı 0-100 arasında olmalıdır.")}`);
+  }
+  if (deviceRegion !== null && deviceRegion !== "tr" && deviceRegion !== "international") {
+    redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz cihaz bölgesi.")}`);
   }
 
   const updates = {
@@ -44,6 +48,7 @@ export async function updateListing(formData: FormData) {
     storage: optional(formData.get("storage")),
     color: optional(formData.get("color")),
     battery_health: batteryHealth,
+    device_region: deviceRegion,
     description: optional(formData.get("description")),
     source_url: optional(formData.get("sourceUrl")),
     stock_status: optional(formData.get("stockStatus")) ?? "in_stock",
@@ -59,6 +64,7 @@ export async function updateListing(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath(`/admin/listings/${productId}`);
+  revalidatePath(`/admin/listings/${productId}/label`);
   redirect(`/admin/listings/${productId}?saved=1`);
 }
 
