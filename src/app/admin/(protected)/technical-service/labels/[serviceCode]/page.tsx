@@ -20,7 +20,7 @@ export default async function ServiceLabelPage({ params }: Props) {
   const supabase = await createSupabaseServerClient();
   const { data: record } = await supabase
     .from("technical_service_records")
-    .select("service_type,service_code,barcode,first_name,last_name,phone,complaint")
+    .select("service_type,service_code,barcode,first_name,last_name,phone,complaint,fault_description")
     .eq("service_code", serviceCode)
     .maybeSingle();
 
@@ -41,7 +41,8 @@ export default async function ServiceLabelPage({ params }: Props) {
           <p><span>Telefon</span><strong>{record.phone}</strong></p>
           <p><span>Servis kodu</span><strong>{record.service_code}</strong></p>
         </div>
-        <p><span>Şikayet / Arıza</span><br /><strong>{record.complaint || "Belirtilmemiş"}</strong></p>
+        <p><span>Müşteri şikayeti</span><br /><strong>{record.complaint || "Belirtilmemiş"}</strong></p>
+        <p><span>Arıza / Teknik Tespit</span><br /><strong>{record.fault_description || "Henüz tespit girilmedi"}</strong></p>
         <div className="troveBarcodeWrap"><Code39Barcode value={record.barcode} height={72} /><strong>{record.barcode}</strong></div>
         <div className="troveLabelCode">Teknik Servis Barkod No: {record.barcode}</div>
       </section>
