@@ -12,6 +12,11 @@ function requiredText(formData: FormData, key: string, label: string) {
   return value;
 }
 
+function optionalText(formData: FormData, key: string) {
+  const value = String(formData.get(key) ?? "").trim();
+  return value || null;
+}
+
 function requiredMoney(formData: FormData, key: string, label: string) {
   const raw = String(formData.get(key) ?? "").trim().replace(",", ".");
   if (!raw) throw new Error(`${label} zorunludur.`);
@@ -46,6 +51,7 @@ function readPayload(formData: FormData) {
     last_name: requiredText(formData, "lastName", "Soyad"),
     phone: requiredText(formData, "phone", "Telefon numarası"),
     complaint: requiredText(formData, "complaint", "Müşteri şikayeti"),
+    fault_description: optionalText(formData, "faultDescription"),
     damage_cost: requiredMoney(formData, "damageCost", "Hasar / maliyet"),
     labor_cost: requiredMoney(formData, "laborCost", "İşçilik"),
     amount_paid: requiredMoney(formData, "amountPaid", "Müşterinin verdiği tutar"),
