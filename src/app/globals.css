@@ -7,6 +7,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top, #171d2b 0, #080a0f 42%); }
+a { color: inherit; }
 .shell { width: min(100% - 32px, 1120px); margin: 0 auto; padding: 72px 0; }
 .hero { max-width: 760px; }
 .eyebrow { margin: 0 0 14px; letter-spacing: .18em; font-size: .78rem; font-weight: 800; color: #9aa8ff; }
@@ -47,12 +48,29 @@ h1 { margin: 0; font-size: clamp(2.5rem, 9vw, 5.5rem); line-height: .96; letter-
 .adminPanel h1 { margin-top: 8px; font-size: clamp(2rem, 10vw, 3.4rem); }
 .adminForm { display: grid; gap: 16px; margin-top: 28px; }
 .adminField { display: grid; gap: 8px; color: #cbd1de; font-size: .9rem; font-weight: 700; }
-.adminField input { width: 100%; padding: 14px 15px; border: 1px solid #303747; border-radius: 14px; outline: none; background: #0d1119; color: #f6f7fb; font: inherit; }
-.adminField input:focus { border-color: #697cff; box-shadow: 0 0 0 3px rgba(105, 124, 255, .14); }
-.adminButton { min-height: 48px; padding: 0 18px; border: 0; border-radius: 14px; background: #f6f7fb; color: #080a0f; font: inherit; font-weight: 800; cursor: pointer; }
+.adminField input,
+.adminField select,
+.adminField textarea { width: 100%; padding: 14px 15px; border: 1px solid #303747; border-radius: 14px; outline: none; background: #0d1119; color: #f6f7fb; font: inherit; }
+.adminField textarea { resize: vertical; min-height: 130px; }
+.adminField input:focus,
+.adminField select:focus,
+.adminField textarea:focus { border-color: #697cff; box-shadow: 0 0 0 3px rgba(105, 124, 255, .14); }
+.adminButton { display: inline-grid; min-height: 48px; padding: 0 18px; place-items: center; border: 0; border-radius: 14px; background: #f6f7fb; color: #080a0f; font: inherit; font-weight: 800; cursor: pointer; text-decoration: none; }
 .adminButtonSecondary { border: 1px solid #303747; background: transparent; color: #f6f7fb; }
 .adminError { margin: 18px 0 0; padding: 13px 14px; border: 1px solid #65323b; border-radius: 14px; background: rgba(105, 35, 48, .18); color: #ffb5c0; line-height: 1.5; }
+.adminSuccess { margin: 0 0 22px; padding: 13px 14px; border: 1px solid #315a48; border-radius: 14px; background: rgba(41, 107, 73, .18); color: #aef0ca; line-height: 1.5; }
 .adminTopbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 40px; }
 .adminDashboardCard { padding: 28px; border: 1px solid #252a36; border-radius: 24px; background: rgba(17, 20, 28, .78); }
 .adminDashboardCard h1 { font-size: clamp(2rem, 8vw, 4rem); }
 .adminDashboardCard p { max-width: 620px; color: #aeb5c5; line-height: 1.7; }
+.adminPageTitle { font-size: clamp(2rem, 8vw, 3.5rem); }
+.adminLead { margin-top: 0; }
+.adminTextLink { color: #cbd1de; font-weight: 800; text-decoration: none; }
+.adminDashboardActions { margin-top: 24px; }
+.adminListingForm { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 26px; }
+.adminFormActions { display: flex; justify-content: flex-start; margin-top: 4px; }
+.adminActionLink { width: fit-content; }
+@media (min-width: 720px) {
+  .adminListingForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adminFieldWide { grid-column: 1 / -1; }
+}
