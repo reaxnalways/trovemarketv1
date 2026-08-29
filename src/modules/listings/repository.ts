@@ -25,6 +25,20 @@ export async function listRecentListings(limit = 8) {
   });
 }
 
+export async function listListingsByCategory(categoryId: string, limit = 24) {
+  const supabase = createPublicSupabaseClient();
+  return resolvePublicListings(async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select(PUBLIC_LISTING_FIELDS)
+      .eq("category_id", categoryId)
+      .eq("publication_status", "published")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    return { data, error };
+  });
+}
+
 export type PublicListingDetail = {
   id: string;
   product_code: string;
