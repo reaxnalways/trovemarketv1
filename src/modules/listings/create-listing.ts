@@ -8,6 +8,7 @@ export type DraftListingInput = {
   storage?: string;
   color?: string;
   batteryHealth?: string;
+  deviceRegion?: "tr" | "passport" | "international";
   description?: string;
   sourceUrl?: string;
   images?: string[];
@@ -23,6 +24,7 @@ export type DraftListingRecord = {
   storage: string | null;
   color: string | null;
   battery_health: string | null;
+  device_region: "tr" | "passport" | "international" | null;
   description: string | null;
   source_url: string | null;
   images: string[];
@@ -31,6 +33,7 @@ export type DraftListingRecord = {
 };
 
 const CONDITIONS = new Set(["new", "used", "refurbished"]);
+const DEVICE_REGIONS = new Set(["tr", "passport", "international"]);
 
 function optionalText(value: string | undefined): string | null {
   const normalized = value?.trim();
@@ -70,6 +73,11 @@ export function buildDraftListing(input: DraftListingInput): DraftListingRecord 
     throw new Error("Geçersiz ürün durumu.");
   }
 
+  const deviceRegion = input.deviceRegion ?? null;
+  if (deviceRegion && !DEVICE_REGIONS.has(deviceRegion)) {
+    throw new Error("Geçersiz cihaz kayıt türü.");
+  }
+
   return {
     category_id: categoryId,
     title,
@@ -80,6 +88,7 @@ export function buildDraftListing(input: DraftListingInput): DraftListingRecord 
     storage: optionalText(input.storage),
     color: optionalText(input.color),
     battery_health: optionalText(input.batteryHealth),
+    device_region: deviceRegion,
     description: optionalText(input.description),
     source_url: optionalText(input.sourceUrl),
     images: normalizeImages(input.images),

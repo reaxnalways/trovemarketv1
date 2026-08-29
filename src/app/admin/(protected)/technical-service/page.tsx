@@ -1,126 +1,34 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
-import {
-  archiveTechnicalServiceRecord,
-  createTechnicalServiceRecord,
-  restoreTechnicalServiceRecord,
-  updateTechnicalServiceRecord,
-} from "./actions";
+import { archiveTechnicalServiceRecord, createTechnicalServiceRecord, restoreTechnicalServiceRecord, updateTechnicalServiceRecord } from "./actions";
 
-type TechnicalServicePageProps = {
-  searchParams: Promise<{ created?: string; updated?: string; archived?: string; restored?: string; error?: string; q?: string; type?: string }>;
-};
+type Props = { searchParams: Promise<{ created?: string; updated?: string; archived?: string; restored?: string; error?: string; q?: string; type?: string; status?: string }> };
+const SERVICE_LABELS: Record<string, string> = { phone: "Telefon", computer: "Bilgisayar", laptop: "Laptop", playstation: "PlayStation" };
+const STATUS_LABELS: Record<string, string> = { in_progress: "Yapılmakta", completed: "Yapıldı", notify_customer: "Haber verilecek" };
+function money(value: number | string) { return `${Number(value).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`; }
 
-const SERVICE_LABELS: Record<string, string> = {
-  phone: "Telefon",
-  computer: "Bilgisayar",
-  laptop: "Laptop",
-  playstation: "PlayStation",
-};
-
-function formatMoney(value: number | string) {
-  return `${Number(value).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
-}
-
-function normalizeSearch(value: string) {
-  return value.toLocaleLowerCase("tr-TR").replace(/\s+/g, " ").trim();
-}
-
-export default async function TechnicalServicePage({ searchParams }: TechnicalServicePageProps) {
-  const { created, updated, archived, restored, error, q, type } = await searchParams;
-  const search = normalizeSearch(q ?? "");
-  const serviceType = SERVICE_LABELS[type ?? ""] ? type : "";
-  const supabase = await createSupabaseServerClient();
-  const { data } = await supabase
-    .from("technical_service_records")
-    .select("id,service_type,service_code,barcode,first_name,last_name,phone,damage_cost,labor_cost,amount_paid,created_at,updated_at,archived_at")
-    .order("created_at", { ascending: false })
-    .limit(1000);
-
-  const allRecords = data ?? [];
-  const matches = (record: (typeof allRecords)[number]) => {
-    if (serviceType && record.service_type !== serviceType) return false;
-    if (!search) return true;
-    return normalizeSearch(`${record.service_code} ${record.barcode} ${record.first_name} ${record.last_name} ${record.phone} ${SERVICE_LABELS[record.service_type] ?? record.service_type}`).includes(search);
-  };
-
-  const activeRecords = allRecords.filter((record) => !record.archived_at && matches(record));
-  const archivedRecords = allRecords.filter((record) => record.archived_at && matches(record));
-  const records = search || serviceType ? activeRecords : activeRecords.slice(0, 100);
-  const totals = records.reduce((sum, record) => ({ damage: sum.damage + Number(record.damage_cost), labor: sum.labor + Number(record.labor_cost), paid: sum.paid + Number(record.amount_paid) }), { damage: 0, labor: 0, paid: 0 });
-  const totalCost = totals.damage + totals.labor;
-
-  return (
-    <main className="adminShell">
-      <header className="adminTopbar">
-        <div><p className="eyebrow">TEKNİK SERVİS</p><h1 className="adminPageTitle">Servis kayıtları</h1></div>
-        <Link className="adminButton adminButtonSecondary adminActionLink" href="/admin">Panele dön</Link>
-      </header>
-
-      {created ? <p className="adminSuccess">Servis kaydı oluşturuldu: <strong>{created}</strong>. Etiketi yazdırabilirsin.</p> : null}
-      {updated ? <p className="adminSuccess">Teknik servis kaydı güncellendi ve geçmiş kopyası saklandı.</p> : null}
-      {archived ? <p className="adminSuccess">Teknik servis kaydı arşivlendi. Veri silinmedi.</p> : null}
-      {restored ? <p className="adminSuccess">Arşivlenen teknik servis kaydı geri yüklendi.</p> : null}
-      {error ? <p className="adminError">{error}</p> : null}
-
-      <section className="adminDashboardCard">
-        <p className="eyebrow">YENİ KAYIT</p><h2>Teknik servis kaydı oluştur</h2>
-        <p className="adminLead">Cihaz türü dahil tüm alanlar zorunludur. Sistem servis kodunu ve teknik servise özel barkodu otomatik üretir.</p>
-        <form action={createTechnicalServiceRecord} className="adminListingForm">
-          <label className="adminField adminFieldWide">Servis türü
-            <select name="serviceType" required defaultValue=""><option value="" disabled>Seç</option><option value="phone">Telefon</option><option value="computer">Bilgisayar</option><option value="laptop">Laptop</option><option value="playstation">PlayStation</option></select>
-          </label>
-          <label className="adminField">Ad<input name="firstName" type="text" autoComplete="given-name" required /></label>
-          <label className="adminField">Soyad<input name="lastName" type="text" autoComplete="family-name" required /></label>
-          <label className="adminField adminFieldWide">Telefon numarası<input name="phone" type="tel" inputMode="tel" autoComplete="tel" required /></label>
-          <label className="adminField">Hasar / maliyet<input name="damageCost" type="number" inputMode="decimal" min="0" step="0.01" required /></label>
-          <label className="adminField">İşçilik<input name="laborCost" type="number" inputMode="decimal" min="0" step="0.01" required /></label>
-          <label className="adminField adminFieldWide">Müşterinin verdiği tutar<input name="amountPaid" type="number" inputMode="decimal" min="0" step="0.01" required /></label>
-          <div className="adminFormActions adminFieldWide"><button className="adminButton" type="submit">Servis kaydını oluştur</button></div>
-        </form>
-      </section>
-
-      <section className="listingSection">
-        <div className="sectionHeading"><div><p className="eyebrow">KAYIT YÖNETİMİ</p><h2>Aktif teknik servis kayıtları</h2></div><p>Servis kodu, barkod, ad, soyad veya telefonla ara.</p></div>
-        <form method="get" className="adminListingForm" style={{ marginBottom: 18 }}>
-          <label className="adminField">Kayıt ara<input name="q" type="search" defaultValue={q ?? ""} placeholder="TS-TEL-..., barkod, ad veya telefon" /></label>
-          <label className="adminField">Servis türü<select name="type" defaultValue={serviceType}><option value="">Tümü</option><option value="phone">Telefon</option><option value="computer">Bilgisayar</option><option value="laptop">Laptop</option><option value="playstation">PlayStation</option></select></label>
-          <div className="adminFormActions adminFieldWide" style={{ gap: 10, flexWrap: "wrap" }}><button className="adminButton" type="submit">Filtrele</button><Link className="adminButton adminButtonSecondary" href="/admin/technical-service">Temizle</Link></div>
-        </form>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 22 }}>
-          <div className="adminDashboardCard" style={{ padding: 18 }}><small>Aktif kayıt</small><strong style={{ display: "block", marginTop: 6 }}>{records.length}</strong></div>
-          <div className="adminDashboardCard" style={{ padding: 18 }}><small>Toplam maliyet + işçilik</small><strong style={{ display: "block", marginTop: 6 }}>{formatMoney(totalCost)}</strong></div>
-          <div className="adminDashboardCard" style={{ padding: 18 }}><small>Toplam alınan</small><strong style={{ display: "block", marginTop: 6 }}>{formatMoney(totals.paid)}</strong></div>
-          <div className="adminDashboardCard" style={{ padding: 18 }}><small>Net fark</small><strong style={{ display: "block", marginTop: 6 }}>{formatMoney(totals.paid - totalCost)}</strong></div>
-        </div>
-
-        {records.length ? <div className="adminDraftList">{records.map((record) => (
-          <article className="adminDraftItem" key={record.id}><div style={{ width: "100%" }}>
-            <span className="productCode">{record.service_code}</span>
-            <h3>{record.first_name} {record.last_name}</h3>
-            <p><strong>{SERVICE_LABELS[record.service_type]}</strong> · {record.phone}</p>
-            <p>Barkod: <strong>{record.barcode}</strong></p>
-            <p>Maliyet: {formatMoney(record.damage_cost)} · İşçilik: {formatMoney(record.labor_cost)} · Verilen: {formatMoney(record.amount_paid)}</p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}><Link className="adminButton adminButtonSecondary" href={`/admin/technical-service/labels/${record.service_code}`}>Servis etiketi</Link></div>
-            <details style={{ marginTop: 16 }}><summary className="adminTextLink" style={{ cursor: "pointer" }}>Kaydı düzenle</summary>
-              <form action={updateTechnicalServiceRecord} className="adminListingForm">
-                <input name="recordId" type="hidden" value={record.id} />
-                <label className="adminField adminFieldWide">Servis türü<select name="serviceType" defaultValue={record.service_type} required><option value="phone">Telefon</option><option value="computer">Bilgisayar</option><option value="laptop">Laptop</option><option value="playstation">PlayStation</option></select></label>
-                <label className="adminField">Ad<input name="firstName" defaultValue={record.first_name} required /></label><label className="adminField">Soyad<input name="lastName" defaultValue={record.last_name} required /></label>
-                <label className="adminField adminFieldWide">Telefon<input name="phone" type="tel" defaultValue={record.phone} required /></label>
-                <label className="adminField">Hasar / maliyet<input name="damageCost" type="number" min="0" step="0.01" defaultValue={Number(record.damage_cost)} required /></label><label className="adminField">İşçilik<input name="laborCost" type="number" min="0" step="0.01" defaultValue={Number(record.labor_cost)} required /></label>
-                <label className="adminField adminFieldWide">Verilen tutar<input name="amountPaid" type="number" min="0" step="0.01" defaultValue={Number(record.amount_paid)} required /></label><div className="adminFormActions adminFieldWide"><button className="adminButton" type="submit">Kaydet</button></div>
-              </form>
-              <form action={archiveTechnicalServiceRecord} style={{ marginTop: 12 }}><input name="recordId" type="hidden" value={record.id} /><button className="adminButton adminButtonSecondary" type="submit">Kaydı arşivle</button></form>
-            </details>
-          </div></article>
-        ))}</div> : <p className="emptyState">Aktif teknik servis kaydı yok.</p>}
-      </section>
-
-      <section className="listingSection"><div className="sectionHeading"><div><p className="eyebrow">ARŞİV</p><h2>Arşivlenmiş kayıtlar</h2></div></div>
-        {archivedRecords.length ? <div className="adminDraftList">{archivedRecords.map((record) => <article className="adminDraftItem" key={record.id}><div><span className="productCode">{record.service_code}</span><h3>{record.first_name} {record.last_name}</h3><p>{SERVICE_LABELS[record.service_type]} · {record.phone} · {record.barcode}</p><form action={restoreTechnicalServiceRecord} style={{ marginTop: 12 }}><input name="recordId" type="hidden" value={record.id} /><button className="adminButton adminButtonSecondary" type="submit">Kaydı geri yükle</button></form></div></article>)}</div> : <p className="emptyState">Arşivlenmiş kayıt yok.</p>}
-      </section>
-    </main>
-  );
+export default async function TechnicalServicePage({ searchParams }: Props) {
+  const { created, updated, archived, restored, error, q, type, status } = await searchParams;
+  const supabase = await createSupabaseServerClient(); const search = q?.trim() ?? ""; const serviceType = SERVICE_LABELS[type ?? ""] ? type! : ""; const serviceStatus = STATUS_LABELS[status ?? ""] ? status! : "";
+  const { data } = await supabase.from("technical_service_records").select("id,service_type,service_status,service_code,barcode,first_name,last_name,phone,complaint,fault_description,damage_cost,labor_cost,amount_paid,created_at,archived_at").order("created_at", { ascending: false }).limit(500);
+  const rows = data ?? [];
+  const matches = (r: (typeof rows)[number]) => { if (serviceType && r.service_type !== serviceType) return false; if (serviceStatus && r.service_status !== serviceStatus) return false; if (!search) return true; return `${r.service_code} ${r.barcode} ${r.first_name} ${r.last_name} ${r.phone} ${r.complaint ?? ""} ${r.fault_description ?? ""} ${STATUS_LABELS[r.service_status] ?? ""}`.toLocaleLowerCase("tr-TR").includes(search.toLocaleLowerCase("tr-TR")); };
+  const active = rows.filter(r => !r.archived_at && matches(r)); const complaints = rows.filter(r => !r.archived_at && r.complaint?.trim() && matches(r)); const archivedRows = rows.filter(r => r.archived_at && matches(r));
+  return <main className="adminShell adminShellWide">
+    <div className="adminPageHeader"><div><p className="eyebrow">TEKNİK SERVİS</p><h1 className="adminPageTitle">Servis yönetimi</h1></div><Link className="adminButton adminButtonSecondary" href="/admin">Panele dön</Link></div>
+    {created ? <p className="adminSuccess">Servis kaydı oluşturuldu: <strong>{created}</strong></p> : null}{updated ? <p className="adminSuccess">Servis kaydı güncellendi.</p> : null}{archived ? <p className="adminSuccess">Kayıt arşivlendi; veri silinmedi.</p> : null}{restored ? <p className="adminSuccess">Kayıt arşivden geri yüklendi.</p> : null}{error ? <p className="adminError">{error}</p> : null}
+    <section id="yeni-kayit" className="adminDashboardCard"><p className="eyebrow">YENİ SERVİS KAYDI</p><h2>Manuel kayıt oluştur</h2><form action={createTechnicalServiceRecord} className="adminListingForm">
+      <label className="adminField adminFieldWide">Servis türü<select name="serviceType" required defaultValue=""><option value="" disabled>Seç</option><option value="phone">Telefon</option><option value="computer">Bilgisayar</option><option value="laptop">Laptop</option><option value="playstation">PlayStation</option></select></label>
+      <label className="adminField adminFieldWide">Durum<select name="serviceStatus" defaultValue="in_progress"><option value="in_progress">Yapılmakta</option><option value="completed">Yapıldı</option><option value="notify_customer">Haber verilecek</option></select></label>
+      <label className="adminField">Ad<input name="firstName" required /></label><label className="adminField">Soyad<input name="lastName" required /></label><label className="adminField adminFieldWide">Telefon<input name="phone" type="tel" required /></label>
+      <label className="adminField adminFieldWide">Müşteri şikayeti<textarea name="complaint" rows={3} required placeholder="Müşteri cihazla ilgili ne söylüyor?" /></label><label className="adminField adminFieldWide">Arıza / Teknik Tespit<textarea name="faultDescription" rows={4} placeholder="Serviste tespit edilen arızayı yaz" /></label>
+      <label className="adminField">Hasar / maliyet<input name="damageCost" type="number" min="0" step="0.01" required /></label><label className="adminField">İşçilik<input name="laborCost" type="number" min="0" step="0.01" required /></label><label className="adminField adminFieldWide">Müşterinin verdiği tutar<input name="amountPaid" type="number" min="0" step="0.01" required /></label><div className="adminFormActions adminFieldWide"><button className="adminButton" type="submit">Servis kaydını oluştur</button></div>
+    </form></section>
+    <section id="servis-kayitlari" className="listingSection"><div className="sectionHeading"><div><p className="eyebrow">SERVİS KAYITLARI</p><h2>Aktif kayıtlar</h2></div></div>
+      <form className="adminDashboardCard adminListingFilters" method="get"><label className="adminField">Ara<input name="q" defaultValue={search} placeholder="Kod, müşteri, şikayet, arıza" /></label><label className="adminField">Tür<select name="type" defaultValue={serviceType}><option value="">Tümü</option><option value="phone">Telefon</option><option value="computer">Bilgisayar</option><option value="laptop">Laptop</option><option value="playstation">PlayStation</option></select></label><label className="adminField">Durum<select name="status" defaultValue={serviceStatus}><option value="">Tümü</option><option value="in_progress">Yapılmakta</option><option value="completed">Yapıldı</option><option value="notify_customer">Haber verilecek</option></select></label><button className="adminButton" type="submit">Filtrele</button><Link className="adminButton adminButtonSecondary" href="/admin/technical-service">Temizle</Link></form>
+      <section className="adminTableCard">{active.length ? active.map(r => <article className="adminProductRow" key={r.id}><div className="adminProductMain"><span className="productCode">{r.service_code}</span><strong>{r.first_name} {r.last_name}</strong><small>{SERVICE_LABELS[r.service_type]} · {r.phone} · Barkod {r.barcode}</small><p><strong>Durum:</strong> {STATUS_LABELS[r.service_status]}</p><p><strong>Müşteri şikayeti:</strong> {r.complaint || "Belirtilmemiş"}</p><p><strong>Arıza / Teknik Tespit:</strong> {r.fault_description || "Henüz tespit girilmedi"}</p></div><div className="adminProductMeta"><span>Maliyet {money(r.damage_cost)}</span><span>İşçilik {money(r.labor_cost)}</span><span>Alınan {money(r.amount_paid)}</span></div><div className="adminInlineActions"><Link className="adminButton adminButtonSecondary" href={`/admin/technical-service/labels/${r.service_code}`}>Etiket</Link><details><summary className="adminButton adminButtonSecondary">Düzenle</summary><form action={updateTechnicalServiceRecord} className="adminListingForm"><input type="hidden" name="recordId" value={r.id}/><div className="adminField adminFieldWide"><span>Servis türü</span><strong>{SERVICE_LABELS[r.service_type]}</strong><small>Servis kodu ve barkod kimliğini korumak için değiştirilemez.</small></div><label className="adminField adminFieldWide">Durum<select name="serviceStatus" defaultValue={r.service_status}><option value="in_progress">Yapılmakta</option><option value="completed">Yapıldı</option><option value="notify_customer">Haber verilecek</option></select></label><label className="adminField">Ad<input name="firstName" defaultValue={r.first_name} required/></label><label className="adminField">Soyad<input name="lastName" defaultValue={r.last_name} required/></label><label className="adminField adminFieldWide">Telefon<input name="phone" defaultValue={r.phone} required/></label><label className="adminField adminFieldWide">Müşteri şikayeti<textarea name="complaint" rows={3} defaultValue={r.complaint ?? ""} required/></label><label className="adminField adminFieldWide">Arıza / Teknik Tespit<textarea name="faultDescription" rows={4} defaultValue={r.fault_description ?? ""}/></label><label className="adminField">Hasar / maliyet<input name="damageCost" type="number" min="0" step="0.01" defaultValue={Number(r.damage_cost)} required/></label><label className="adminField">İşçilik<input name="laborCost" type="number" min="0" step="0.01" defaultValue={Number(r.labor_cost)} required/></label><label className="adminField adminFieldWide">Alınan tutar<input name="amountPaid" type="number" min="0" step="0.01" defaultValue={Number(r.amount_paid)} required/></label><button className="adminButton" type="submit">Kaydet</button></form></details><form action={archiveTechnicalServiceRecord}><input type="hidden" name="recordId" value={r.id}/><button className="adminButton adminButtonSecondary" type="submit">Arşivle</button></form></div></article>) : <p className="emptyState">Aktif servis kaydı yok.</p>}</section>
+    </section>
+    <section id="sikayetler" className="listingSection"><div className="sectionHeading"><div><p className="eyebrow">ŞİKAYETLER</p><h2>Müşteri şikayetleri ve teknik tespitler</h2></div><span>{complaints.length} aktif kayıt</span></div><section className="adminTableCard">{complaints.length ? complaints.map(r => <article className="adminProductRow" key={`complaint-${r.id}`}><div className="adminProductMain"><span className="productCode">{r.service_code}</span><strong>{r.first_name} {r.last_name}</strong><small>{SERVICE_LABELS[r.service_type]} · {STATUS_LABELS[r.service_status]}</small><p><strong>Müşteri şikayeti:</strong> {r.complaint}</p><p><strong>Arıza / Teknik Tespit:</strong> {r.fault_description || "Henüz tespit girilmedi"}</p></div></article>) : <p className="emptyState">Aktif şikayet kaydı yok.</p>}</section></section>
+    <section id="arsiv" className="listingSection"><div className="sectionHeading"><div><p className="eyebrow">ARŞİV</p><h2>Arşivlenmiş servis kayıtları</h2></div></div><section className="adminTableCard">{archivedRows.length ? archivedRows.map(r => <article className="adminProductRow" key={r.id}><div className="adminProductMain"><span className="productCode">{r.service_code}</span><strong>{r.first_name} {r.last_name}</strong><small>{SERVICE_LABELS[r.service_type]} · {STATUS_LABELS[r.service_status]}</small><p><strong>Şikayet:</strong> {r.complaint}</p><p><strong>Arıza:</strong> {r.fault_description || "Tespit yok"}</p></div><form action={restoreTechnicalServiceRecord}><input type="hidden" name="recordId" value={r.id}/><button className="adminButton adminButtonSecondary" type="submit">Geri yükle</button></form></article>) : <p className="emptyState">Arşivlenmiş servis kaydı yok.</p>}</section></section>
+  </main>;
 }

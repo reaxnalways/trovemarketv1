@@ -2,6 +2,10 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isAdminEmail } from "@/modules/auth/admin-access";
+import { AdminSidebar } from "./admin-sidebar";
+import "../admin.css";
+import "../image-manager.css";
+import "../label.css";
 
 export default async function ProtectedAdminLayout({
   children,
@@ -15,5 +19,10 @@ export default async function ProtectedAdminLayout({
     redirect("/admin/login");
   }
 
-  return children;
+  return (
+    <div className="adminAppShell">
+      <AdminSidebar />
+      <div className="adminMainColumn">{children}</div>
+    </div>
+  );
 }
