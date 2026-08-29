@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { FALLBACK_SITE_SETTINGS, resolvePublicSiteSettings } from "./public-settings.ts";
+import { FALLBACK_SITE_SETTINGS, resolvePublicSiteSettings } from "./public-settings-resolver.ts";
 
 test("uses stored SVG logo and site name when available", () => {
   const settings = resolvePublicSiteSettings({
