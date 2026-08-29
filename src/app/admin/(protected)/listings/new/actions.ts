@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isAdminEmail } from "@/modules/auth/admin-access";
+import { inferDeviceRegion } from "@/modules/importers/device-registration";
 import { assertSahibindenUrl, parseSahibindenText } from "@/modules/importers/sahibinden";
 import { buildDraftListing } from "@/modules/listings/create-listing";
 
@@ -66,6 +67,7 @@ export async function createImportedDraftListing(sourceUrl: string, sourceText: 
     storage: imported.storage ?? undefined,
     color: imported.color ?? undefined,
     batteryHealth: imported.batteryHealth ?? undefined,
+    deviceRegion: inferDeviceRegion(sourceText) ?? undefined,
     description: imported.description ?? undefined,
     sourceUrl,
     images,
@@ -81,5 +83,5 @@ export async function createImportedDraftListing(sourceUrl: string, sourceText: 
     redirect(`/admin/listings/new?error=${encodeURIComponent("İlan bilgileri ayrıştırıldı ancak taslak kaydedilemedi.")}`);
   }
 
-  redirect(`/admin?created=${encodeURIComponent(data.product_code)}`);
+  redirect(`/admin/listings/${data.id}?created=1`);
 }
