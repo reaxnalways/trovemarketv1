@@ -27,13 +27,68 @@ function validateImageUrls(imageUrls: string[]): string[] {
   return normalized;
 }
 
-export async function createImportedDraftListing(sourceUrl: string, sourceText: string, imageUrls: string[]) {
+async function requireAdmin() {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user || !isAdminEmail(userData.user.email)) redirect("/admin/login");
+  return supabase;
+}
 
-  if (userError || !userData.user || !isAdminEmail(userData.user.email)) {
-    redirect("/admin/login");
+export async function createManualListing(input: {
+  categoryId: string;
+  title: string;
+  brand: string;
+  model: string;
+  price: string;
+  condition: string;
+  storage: string;
+  color: string;
+  batteryHealth: string;
+  deviceRegion: string;
+  description: string;
+  publicationStatus: string;
+  isFeatured: boolean;
+  images: string[];
+}) {
+  const supabase = await requireAdmin();
+  let listing;
+  try {
+    const images = validateImageUrls(input.images);
+    const deviceRegion = ["tr", "passport", "international"].includes(input.deviceRegion)
+      ? input.deviceRegion as "tr" | "passport" | "international"
+      : undefined;
+
+    listing = buildDraftListing({
+      categoryId: input.categoryId,
+      title: input.title,
+      brand: input.brand,
+      model: input.model,
+      price: input.price,
+      condition: input.condition,
+      storage: input.storage,
+      color: input.color,
+      batteryHealth: input.batteryHealth,
+      deviceRegion,
+      description: input.description,
+      images,
+    });
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : "Manuel ilan doğrulanamadı.");
   }
+
+  const publicationStatus = input.publicationStatus === "published" ? "published" : "draft";
+  const { data, error } = await supabase
+    .from("products")
+    .insert({ ...listing, publication_status: publicationStatus, is_featured: input.isFeatured })
+    .select("id")
+    .single();
+
+  if (error || !data) throw new Error("Manuel ilan kaydedilemedi.");
+  redirect(`/admin/listings/${data.id}?created=1`);
+}
+
+export async function createImportedDraftListing(sourceUrl: string, sourceText: string, imageUrls: string[]) {
+  const supabase = await requireAdmin();
 
   let images: string[];
   let imported;
