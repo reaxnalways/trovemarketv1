@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatListingPrice } from "../../../modules/listings/public-listings";
 import { getPublicListingByProductCode } from "../../../modules/listings/repository";
+import { buildListingWhatsAppUrl } from "../../../modules/listings/whatsapp";
 
 type ListingDetailPageProps = { params: Promise<{ productCode: string }> };
 
@@ -37,6 +38,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
           <h1 className="listingDetailTitle">{listing.title}</h1>
           <strong className="listingDetailPrice">{formatListingPrice(listing.price)}</strong>
           {details.length ? <dl className="listingSpecs">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : null}
+          <a className="adminButton adminActionLink" href={buildListingWhatsAppUrl(listing.product_code, listing.title)}>WhatsApp ile bilgi al</a>
           {listing.description ? <div className="listingDescription"><h2>Açıklama</h2><p>{listing.description}</p></div> : null}
         </section>
       </div>
