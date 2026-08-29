@@ -31,9 +31,10 @@ export default async function AdminHomePage({ searchParams }: AdminHomePageProps
 
       <section className="adminDashboardCard">
         <h1>Yönetim paneli</h1>
-        <p>Yeni ilan oluştur, barkodla ürün bul, teknik servis kayıtlarını yönet ve site ayarlarını tek panelden kontrol et.</p>
+        <p>İlanları, barkodlu ürünleri, teknik servis kayıtlarını ve site ayarlarını tek panelden yönet.</p>
         <div className="adminDashboardActions adminDashboardActionRow">
           <Link className="adminButton adminActionLink" href="/admin/listings/new">Yeni ilan oluştur</Link>
+          <Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/listings">Tüm ilanlar</Link>
           <Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/scanner">Barkod Tara</Link>
           <Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/technical-service">Teknik servis kaydı</Link>
           <Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/settings">Site ayarları</Link>
