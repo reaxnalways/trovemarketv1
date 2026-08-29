@@ -16,6 +16,7 @@ const navGroups = [
     items: [
       { label: "Servis kayıtları", href: "/admin/technical-service#servis-kayitlari" },
       { label: "Yeni servis kaydı", href: "/admin/technical-service#yeni-kayit" },
+      { label: "Servis barkodu tara", href: "/admin/technical-service/scanner" },
       { label: "Şikayetler", href: "/admin/technical-service#sikayetler" },
       { label: "Servis etiketleri", href: "/admin/technical-service#servis-kayitlari" },
       { label: "Arşiv", href: "/admin/technical-service#arsiv" },
@@ -40,43 +41,21 @@ export function AdminSidebar() {
       <div className="adminSidebarBrand">
         <Link href="/admin" className="adminSidebarBrandLink">
           <span className="adminSidebarMark">T</span>
-          <span>
-            <strong>Trove Teknoloji</strong>
-            <small>Yönetim Paneli</small>
-          </span>
+          <span><strong>Trove Teknoloji</strong><small>Yönetim Paneli</small></span>
         </Link>
       </div>
-
       <nav className="adminSidebarNav" aria-label="Admin menüsü">
-        <Link className="adminSidebarHome" href="/admin">
-          Genel Bakış
-        </Link>
-
+        <Link className="adminSidebarHome" href="/admin">Genel Bakış</Link>
         {navGroups.map((group, index) => (
           <details className="adminSidebarGroup" open={index === 0 || group.label === "Teknik Servis"} key={group.label}>
-            <summary>
-              {group.label}
-              <span aria-hidden="true">⌄</span>
-            </summary>
+            <summary>{group.label}<span aria-hidden="true">⌄</span></summary>
             <div className="adminSidebarGroupItems">
-              {group.items.map((item) => (
-                <Link
-                  className="adminSidebarItem"
-                  href={item.href}
-                  key={item.label}
-                  target={"external" in item && item.external ? "_blank" : undefined}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {group.items.map((item) => <Link className="adminSidebarItem" href={item.href} key={item.label} target={"external" in item && item.external ? "_blank" : undefined}>{item.label}</Link>)}
             </div>
           </details>
         ))}
       </nav>
-
-      <form action={logoutAdmin} className="adminSidebarLogout">
-        <button type="submit">Çıkış yap</button>
-      </form>
+      <form action={logoutAdmin} className="adminSidebarLogout"><button type="submit">Çıkış yap</button></form>
     </aside>
   );
 }
