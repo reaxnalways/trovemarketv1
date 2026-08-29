@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Code39Barcode } from "@/components/code39-barcode";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { PrintButton } from "./print-button";
+import styles from "./label.module.css";
 
 type ProductLabelPageProps = {
   params: Promise<{ productCode: string }>;
@@ -35,11 +36,11 @@ export default async function ProductLabelPage({ params }: ProductLabelPageProps
         </div>
       </header>
 
-      <section className="troveLabel">
-        <div className="troveLabelBrand">TROVE TEKNOLOJİ</div>
+      <section className={styles.label}>
+        <div className={styles.brand}>TROVE TEKNOLOJİ</div>
         <h2>{[product.brand, product.model].filter(Boolean).join(" ") || product.title}</h2>
 
-        <div className="troveLabelGrid">
+        <div className={styles.grid}>
           {product.storage ? <p><span>Hafıza</span><strong>{product.storage}</strong></p> : null}
           {product.color ? <p><span>Renk</span><strong>{product.color}</strong></p> : null}
           {product.battery_health != null ? <p><span>Pil</span><strong>%{product.battery_health}</strong></p> : null}
@@ -47,11 +48,11 @@ export default async function ProductLabelPage({ params }: ProductLabelPageProps
           {product.device_region ? <p><span>Cihaz</span><strong>{product.device_region}</strong></p> : null}
         </div>
 
-        <div className="troveBarcodeWrap">
+        <div className={styles.barcode}>
           <Code39Barcode value={barcodeValue} height={72} />
           <strong>{barcodeValue}</strong>
         </div>
-        <div className="troveLabelCode">Ürün Kodu: {product.product_code}</div>
+        <div className={styles.code}>Ürün Kodu: {product.product_code}</div>
       </section>
     </main>
   );
