@@ -57,16 +57,61 @@ export default async function ScannerPage({ searchParams }: ScannerPageProps) {
           </div>
 
           <div className="adminDashboardCard">
-            <p><strong>Marka / model:</strong> {[product.brand, product.model].filter(Boolean).join(" ") || "Belirtilmedi"}</p>
-            <p><strong>Hafıza:</strong> {product.storage || "Belirtilmedi"}</p>
-            <p><strong>Renk:</strong> {product.color || "Belirtilmedi"}</p>
-            <p><strong>Pil sağlığı:</strong> {product.battery_health == null ? "Belirtilmedi" : `%${product.battery_health}`}</p>
-            <p><strong>Cihaz bölgesi:</strong> {product.device_region || "Belirtilmedi"}</p>
             <p><strong>Mevcut fiyat:</strong> {formatMoney(product.price)}</p>
             <p><strong>Barkod:</strong> {product.barcode || product.product_code}</p>
 
             <form action={updateScannedProduct} className="adminListingForm" style={{ marginTop: 20 }}>
               <input name="productCode" type="hidden" value={product.product_code} />
+
+              <label className="adminField adminFieldWide">
+                Başlık
+                <input name="title" type="text" minLength={3} defaultValue={product.title} required />
+              </label>
+
+              <label className="adminField">
+                Marka
+                <input name="brand" type="text" defaultValue={product.brand ?? ""} />
+              </label>
+
+              <label className="adminField">
+                Model
+                <input name="model" type="text" defaultValue={product.model ?? ""} />
+              </label>
+
+              <label className="adminField">
+                Hafıza
+                <input name="storage" type="text" defaultValue={product.storage ?? ""} />
+              </label>
+
+              <label className="adminField">
+                Renk
+                <input name="color" type="text" defaultValue={product.color ?? ""} />
+              </label>
+
+              <label className="adminField">
+                Pil sağlığı (%)
+                <input name="batteryHealth" type="number" inputMode="numeric" min="0" max="100" step="1" defaultValue={product.battery_health ?? ""} />
+              </label>
+
+              <label className="adminField">
+                Ürün durumu
+                <select name="condition" defaultValue={product.condition ?? ""}>
+                  <option value="">Belirtilmedi</option>
+                  <option value="new">Sıfır</option>
+                  <option value="used">İkinci el</option>
+                  <option value="refurbished">Yenilenmiş</option>
+                </select>
+              </label>
+
+              <label className="adminField">
+                Cihaz bölgesi
+                <select name="deviceRegion" defaultValue={product.device_region ?? ""}>
+                  <option value="">Belirtilmedi</option>
+                  <option value="tr">TR cihaz</option>
+                  <option value="passport">Pasaport kayıtlı</option>
+                  <option value="international">Yurt dışı</option>
+                </select>
+              </label>
 
               <label className="adminField">
                 Fiyat
@@ -79,6 +124,7 @@ export default async function ScannerPage({ searchParams }: ScannerPageProps) {
                   <option value="in_stock">Stokta</option>
                   <option value="reserved">Rezerve</option>
                   <option value="sold">Satıldı</option>
+                  <option value="out_of_stock">Stok dışı</option>
                 </select>
               </label>
 
