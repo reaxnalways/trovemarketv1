@@ -2,17 +2,24 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicSupabaseConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
-import { deleteListing, updateListing } from "./actions";
+import { deleteListing, quickUpdateListingStatus, updateListing } from "./actions";
 import { ProductImageManager } from "./product-image-manager";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; created?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; created?: string; published?: string; quick?: string; error?: string }>;
+};
+
+const quickMessages: Record<string, string> = {
+  sold: "Ürün satıldı olarak işaretlendi.",
+  hidden: "Ürün yayından kaldırıldı.",
+  in_stock: "Ürün yeniden stokta olarak işaretlendi.",
+  published: "Ürün yayına alındı.",
 };
 
 export default async function AdminListingEditPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const { saved, created, error } = await searchParams;
+  const { saved, created, published, quick, error } = await searchParams;
   const { url, publishableKey } = getPublicSupabaseConfig();
   const supabase = await createSupabaseServerClient();
   const { data: product } = await supabase
@@ -34,8 +41,30 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
       </div>
 
       {created ? <p className="adminSuccess">Taslak oluşturuldu. Çekilen bilgileri kontrol et, gerekiyorsa düzelt ve Yayın alanını “Yayında” seçerek kaydet.</p> : null}
-      {saved ? <p className="adminSuccess">Ürün güncellendi.</p> : null}
+      {saved ? <p className="adminSuccess">{published ? "Ürün kaydedildi ve yayına alındı." : "Ürün güncellendi."}</p> : null}
+      {quick && quickMessages[quick] ? <p className="adminSuccess">{quickMessages[quick]}</p> : null}
       {error ? <p className="adminError">{error}</p> : null}
+
+      <section className="adminDashboardCard" style={{ marginTop: 24 }}>
+        <div className="adminPageHeader">
+          <div>
+            <p className="eyebrow">HIZLI İŞLEMLER</p>
+            <h2 style={{ margin: 0 }}>Mağaza işlemleri</h2>
+          </div>
+          <form className="adminInlineActions" action={quickUpdateListingStatus}>
+            <input type="hidden" name="productId" value={product.id} />
+            {product.publication_status !== "published" ? <button className="adminButton" name="quickIntent" value="publish" type="submit">Yayına Al</button> : null}
+            {product.stock_status !== "sold" ? <button className="adminButton adminButtonSecondary" name="quickIntent" value="sold" type="submit">Satıldı Yap</button> : null}
+            {product.stock_status !== "in_stock" ? <button className="adminButton adminButtonSecondary" name="quickIntent" value="in_stock" type="submit">Stokta Yap</button> : null}
+            {product.publication_status !== "hidden" ? <button className="adminButton adminButtonSecondary" name="quickIntent" value="hide" type="submit">Yayından Kaldır</button> : null}
+          </form>
+        </div>
+        <div className="adminProductMeta" style={{ marginTop: 16 }}>
+          <span>Barkod: {product.barcode || product.product_code}</span>
+          <span>Yayın: {product.publication_status}</span>
+          <span>Stok: {product.stock_status}</span>
+        </div>
+      </section>
 
       <ProductImageManager
         initialImages={Array.isArray(product.images) ? product.images : []}
@@ -45,12 +74,6 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
       />
 
       <section className="adminDashboardCard" style={{ marginTop: 24 }}>
-        <div className="adminProductMeta">
-          <span>Barkod: {product.barcode || product.product_code}</span>
-          <span>{product.publication_status}</span>
-          <span>{product.stock_status}</span>
-        </div>
-
         <form className="adminListingForm" action={updateListing}>
           <input type="hidden" name="productId" value={product.id} />
           <label className="adminField adminFieldWide">Başlık<input name="title" defaultValue={product.title} required /></label>
@@ -67,7 +90,10 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
           <label className="adminField adminFieldWide">Kaynak URL<input name="sourceUrl" defaultValue={product.source_url ?? ""} /></label>
           <label className="adminField adminFieldWide">Açıklama<textarea name="description" defaultValue={product.description ?? ""} /></label>
           <label className="adminCheck adminFieldWide"><input name="isFeatured" type="checkbox" defaultChecked={product.is_featured} /> Bu ürünü öne çıkar</label>
-          <div className="adminFormActions adminFieldWide"><button className="adminButton" type="submit">Değişiklikleri kaydet</button></div>
+          <div className="adminFormActions adminFieldWide">
+            <button className="adminButton adminButtonSecondary" type="submit">Değişiklikleri Kaydet</button>
+            <button className="adminButton" name="actionIntent" value="publish" type="submit">Kaydet ve Yayınla</button>
+          </div>
         </form>
       </section>
 
