@@ -31,9 +31,10 @@ export default async function AdminHomePage({ searchParams }: AdminHomePageProps
 
       <section className="adminDashboardCard">
         <h1>Yönetim paneli</h1>
-        <p>Yeni ilanı oluştur, kontrol et ve hazır olduğunda yayınla. Site marka ve iletişim ayarlarını ayrı ekrandan yönet.</p>
+        <p>Yeni ilanı oluştur, teknik servis kayıtlarını yönet, kontrol et ve hazır olduğunda yayınla. Site marka ve iletişim ayarlarını ayrı ekrandan yönet.</p>
         <div className="adminDashboardActions adminDashboardActionRow">
           <Link className="adminButton adminActionLink" href="/admin/listings/new">Yeni ilan oluştur</Link>
+          <Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/technical-service">Teknik servis kaydı</Link>
           <Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/settings">Site ayarları</Link>
         </div>
       </section>
