@@ -1,0 +1,68 @@
+.label {
+  width: min(100%, 420px);
+  margin: 0 auto;
+  padding: 22px;
+  border: 1px solid #303747;
+  border-radius: 18px;
+  background: #fff;
+  color: #080a0f;
+}
+
+.brand {
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .18em;
+}
+
+.label h2 {
+  margin: 9px 0 14px;
+  font-size: 1.3rem;
+  line-height: 1.15;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 14px;
+  padding: 12px 0;
+  border-top: 1px solid #d9dce3;
+  border-bottom: 1px solid #d9dce3;
+}
+
+.grid p { margin: 0; }
+.grid span, .grid strong { display: block; }
+.grid span { color: #606775; font-size: .67rem; }
+.grid strong { margin-top: 2px; font-size: .82rem; }
+
+.barcode {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.barcode strong {
+  display: block;
+  margin-top: 4px;
+  font-size: .82rem;
+  letter-spacing: .16em;
+}
+
+.code {
+  margin-top: 8px;
+  text-align: center;
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+@media print {
+  :global(body) { background: #fff !important; }
+  :global(.printHidden) { display: none !important; }
+  :global(.adminShell) { width: auto !important; padding: 0 !important; }
+  .label {
+    width: 60mm;
+    margin: 0;
+    padding: 4mm;
+    border: 0;
+    border-radius: 0;
+    break-inside: avoid;
+  }
+}
