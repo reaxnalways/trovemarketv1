@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getPublicSupabaseConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { deleteListing, updateListing } from "./actions";
+import { ProductImageManager } from "./product-image-manager";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -11,6 +13,7 @@ type Props = {
 export default async function AdminListingEditPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { saved, created, error } = await searchParams;
+  const { url, publishableKey } = getPublicSupabaseConfig();
   const supabase = await createSupabaseServerClient();
   const { data: product } = await supabase
     .from("products")
@@ -33,6 +36,13 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
       {created ? <p className="adminSuccess">Taslak oluşturuldu. Çekilen bilgileri kontrol et, gerekiyorsa düzelt ve Yayın alanını “Yayında” seçerek kaydet.</p> : null}
       {saved ? <p className="adminSuccess">Ürün güncellendi.</p> : null}
       {error ? <p className="adminError">{error}</p> : null}
+
+      <ProductImageManager
+        initialImages={Array.isArray(product.images) ? product.images : []}
+        productId={product.id}
+        supabasePublishableKey={publishableKey}
+        supabaseUrl={url}
+      />
 
       <section className="adminDashboardCard" style={{ marginTop: 24 }}>
         <div className="adminProductMeta">
