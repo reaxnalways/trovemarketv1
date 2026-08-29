@@ -24,7 +24,10 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
     <main className="adminShell">
       <div className="adminPageHeader">
         <div><p className="eyebrow">ÜRÜN YÖNETİMİ</p><h1 className="adminPageTitle">{product.product_code}</h1></div>
-        <Link className="adminButton adminButtonSecondary" href="/admin/listings">İlanlara dön</Link>
+        <div className="adminInlineActions">
+          <Link className="adminButton" href={`/admin/listings/${product.id}/label`}>Etiket yazdır</Link>
+          <Link className="adminButton adminButtonSecondary" href="/admin/listings">İlanlara dön</Link>
+        </div>
       </div>
 
       {saved ? <p className="adminSuccess">Ürün güncellendi.</p> : null}
