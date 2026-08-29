@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isAdminEmail } from "@/modules/auth/admin-access";
+import "../admin.css";
 
 export default async function ProtectedAdminLayout({
   children,
