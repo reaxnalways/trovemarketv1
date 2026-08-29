@@ -18,6 +18,40 @@ function optional(value: FormDataEntryValue | null) {
   return normalized || null;
 }
 
+function validateProductImages(imageUrls: string[]) {
+  const images = imageUrls.map((value) => value.trim()).filter(Boolean);
+  if (images.length === 0) throw new Error("Üründe en az bir görsel olmalıdır.");
+  if (images.length > 12) throw new Error("Bir üründe en fazla 12 görsel olabilir.");
+
+  for (const value of images) {
+    let url: URL;
+    try {
+      url = new URL(value);
+    } catch {
+      throw new Error("Görsellerden biri geçersiz.");
+    }
+    if (url.protocol !== "https:" || !url.pathname.includes("/storage/v1/object/public/product-images/")) {
+      throw new Error("Yalnızca Trove ürün deposundaki görseller kullanılabilir.");
+    }
+  }
+
+  return images;
+}
+
+export async function updateListingImages(productId: string, imageUrls: string[]) {
+  const normalizedProductId = productId.trim();
+  if (!normalizedProductId) throw new Error("Ürün kimliği eksik.");
+  const images = validateProductImages(imageUrls);
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("products").update({ images }).eq("id", normalizedProductId);
+  if (error) throw new Error("Ürün görselleri kaydedilemedi.");
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/listings");
+  revalidatePath(`/admin/listings/${normalizedProductId}`);
+}
+
 export async function updateListing(formData: FormData) {
   const productId = optional(formData.get("productId"));
   const title = optional(formData.get("title"));
