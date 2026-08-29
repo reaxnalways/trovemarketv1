@@ -9,11 +9,13 @@ test("builds a normalized draft listing", () => {
     brand: " Apple ",
     price: "49999,90",
     condition: "used",
+    images: [" https://example.supabase.co/storage/v1/object/public/product-images/one.jpg "],
   });
 
   assert.equal(listing.title, "iPhone 15 Pro");
   assert.equal(listing.brand, "Apple");
   assert.equal(listing.price, 49999.9);
+  assert.deepEqual(listing.images, ["https://example.supabase.co/storage/v1/object/public/product-images/one.jpg"]);
   assert.equal(listing.publication_status, "draft");
   assert.equal(listing.stock_status, "in_stock");
 });
@@ -24,6 +26,7 @@ test("keeps optional listing fields nullable", () => {
   assert.equal(listing.price, null);
   assert.equal(listing.model, null);
   assert.equal(listing.condition, null);
+  assert.deepEqual(listing.images, []);
 });
 
 test("rejects missing category and short titles", () => {
