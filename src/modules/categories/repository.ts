@@ -14,3 +14,16 @@ export async function listPublicCategories() {
     return { data, error };
   });
 }
+
+export async function getPublicCategoryBySlug(slug: string) {
+  const supabase = createPublicSupabaseClient();
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id,name,slug,description")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) throw new Error(`Unable to load public category: ${error.message}`);
+  return data;
+}
