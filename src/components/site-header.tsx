@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { PublicSiteSettings } from "../modules/settings/public-settings";
 
 const navigation = [
   { href: "/kategori/telefon", label: "Telefon" },
@@ -7,14 +8,22 @@ const navigation = [
   { href: "/kategori/teknik-servis", label: "Teknik Servis" },
 ];
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  settings: PublicSiteSettings;
+};
+
+export function SiteHeader({ settings }: SiteHeaderProps) {
   return (
     <header className="siteHeader">
       <div className="siteHeaderInner">
-        <Link className="siteBrand" href="/" aria-label="Trove Teknoloji ana sayfa">
-          <span className="siteBrandMark">T</span>
-          <span>
-            <strong>Trove</strong>
+        <Link className="siteBrand" href="/" aria-label={`${settings.site_name} ana sayfa`}>
+          {settings.logo_url ? (
+            <img className="siteBrandLogo" src={settings.logo_url} alt={`${settings.site_name} logo`} />
+          ) : (
+            <span className="siteBrandMark">T</span>
+          )}
+          <span className="siteBrandText">
+            <strong>{settings.site_name}</strong>
             <small>Teknoloji</small>
           </span>
         </Link>
