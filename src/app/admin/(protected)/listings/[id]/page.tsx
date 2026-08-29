@@ -5,12 +5,12 @@ import { deleteListing, updateListing } from "./actions";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; created?: string; error?: string }>;
 };
 
 export default async function AdminListingEditPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const { saved, error } = await searchParams;
+  const { saved, created, error } = await searchParams;
   const supabase = await createSupabaseServerClient();
   const { data: product } = await supabase
     .from("products")
@@ -30,6 +30,7 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
         </div>
       </div>
 
+      {created ? <p className="adminSuccess">Taslak oluşturuldu. Çekilen bilgileri kontrol et, gerekiyorsa düzelt ve Yayın alanını “Yayında” seçerek kaydet.</p> : null}
       {saved ? <p className="adminSuccess">Ürün güncellendi.</p> : null}
       {error ? <p className="adminError">{error}</p> : null}
 
