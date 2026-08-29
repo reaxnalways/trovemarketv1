@@ -18,7 +18,12 @@ export function SiteHeader({ settings = FALLBACK_SITE_SETTINGS }: SiteHeaderProp
   return (
     <header className="siteHeader">
       <div className="siteHeaderInner">
-        <Link className="siteBrand" href="/" aria-label={siteName + " ana sayfa"}>
+        <Link
+          className="siteBrand"
+          href="/"
+          aria-label={siteName + " ana sayfa"}
+          style={{ minWidth: 0, maxWidth: "min(58vw, 360px)" }}
+        >
           {settings.logo_url ? (
             <img
               src={settings.logo_url}
@@ -30,9 +35,9 @@ export function SiteHeader({ settings = FALLBACK_SITE_SETTINGS }: SiteHeaderProp
           ) : (
             <span className="siteBrandMark">T</span>
           )}
-          <span className="siteBrandText">
-            <strong>{siteName}</strong>
-            <small>Teknoloji</small>
+          <span className="siteBrandText" style={{ minWidth: 0, display: "grid", lineHeight: 1.05 }}>
+            <strong style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{siteName}</strong>
+            <small style={{ marginTop: 4, color: "#7f899d", fontSize: ".7rem" }}>Teknoloji</small>
           </span>
         </Link>
 
