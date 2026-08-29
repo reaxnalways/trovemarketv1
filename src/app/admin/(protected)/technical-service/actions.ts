@@ -45,6 +45,7 @@ function readPayload(formData: FormData) {
     first_name: requiredText(formData, "firstName", "Ad"),
     last_name: requiredText(formData, "lastName", "Soyad"),
     phone: requiredText(formData, "phone", "Telefon numarası"),
+    complaint: requiredText(formData, "complaint", "Müşteri şikayeti"),
     damage_cost: requiredMoney(formData, "damageCost", "Hasar / maliyet"),
     labor_cost: requiredMoney(formData, "laborCost", "İşçilik"),
     amount_paid: requiredMoney(formData, "amountPaid", "Müşterinin verdiği tutar"),
@@ -56,7 +57,6 @@ export async function createTechnicalServiceRecord(formData: FormData) {
   let payload;
   try { payload = { ...readPayload(formData), created_by: user.id }; }
   catch (error) { redirect(`/admin/technical-service?error=${encodeURIComponent(error instanceof Error ? error.message : "Servis kaydı oluşturulamadı.")}`); }
-
   const { data, error } = await supabase.from("technical_service_records").insert(payload).select("service_code").single();
   if (error || !data) redirect(`/admin/technical-service?error=${encodeURIComponent("Servis kaydı veritabanına kaydedilemedi.")}`);
   redirect(`/admin/technical-service?created=${encodeURIComponent(data.service_code)}`);
