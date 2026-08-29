@@ -23,6 +23,7 @@ function fileExtension(file: File): string {
 export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initialError }: ListingImportFormProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [sourceUrl, setSourceUrl] = useState("");
+  const [sourceText, setSourceText] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [clientError, setClientError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,6 +34,10 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
 
     if (!sourceUrl.trim()) {
       setClientError("Sahibinden ilan linki zorunludur.");
+      return;
+    }
+    if (sourceText.trim().length < 20) {
+      setClientError("Sahibinden ilan detaylarını kopyalayıp ilan metni alanına yapıştırmalısın.");
       return;
     }
     if (files.length === 0) {
@@ -74,8 +79,8 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
         imageUrls.push(data.publicUrl);
       }
 
-      setStatus("Sahibinden bilgileri alınıyor ve taslak oluşturuluyor...");
-      await createImportedDraftListing(sourceUrl.trim(), imageUrls);
+      setStatus("İlan metni ayrıştırılıyor ve taslak oluşturuluyor...");
+      await createImportedDraftListing(sourceUrl.trim(), sourceText.trim(), imageUrls);
     } catch (error) {
       setBusy(false);
       setStatus(null);
@@ -87,8 +92,9 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
     <form className="adminImportForm" onSubmit={handleSubmit}>
       <div className="adminFlowSteps" aria-label="İlan oluşturma adımları">
         <span>1. Görseller</span>
-        <span>2. Sahibinden linki</span>
-        <span>3. Bilgileri çek & kaydet</span>
+        <span>2. Link</span>
+        <span>3. İlan metni</span>
+        <span>4. Ayrıştır & kaydet</span>
       </div>
 
       {initialError ? <p className="adminError">{initialError}</p> : null}
@@ -116,11 +122,23 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
           type="url"
           value={sourceUrl}
         />
-        <small>Başlık, fiyat, marka/model, açıklama ve uygun ürün detayları linkten alınır.</small>
+        <small>Link kaynak referansı olarak ilan kaydında saklanır.</small>
+      </label>
+
+      <label className="adminField">
+        Sahibinden ilan metni
+        <textarea
+          disabled={busy}
+          onChange={(event) => setSourceText(event.target.value)}
+          placeholder="Sahibinden ilan sayfasındaki başlık, fiyat, özellikler ve açıklama bölümünü kopyalayıp buraya yapıştır."
+          rows={12}
+          value={sourceText}
+        />
+        <small>Tek tek alan doldurma: ilan detaylarını topluca yapıştır, Trove gerekli bilgileri ayırır.</small>
       </label>
 
       <button className="adminButton adminImportButton" disabled={busy} type="submit">
-        {busy ? "İşleniyor..." : "Bilgileri Çek ve Taslak Oluştur"}
+        {busy ? "İşleniyor..." : "Bilgileri Ayrıştır ve Taslak Oluştur"}
       </button>
     </form>
   );

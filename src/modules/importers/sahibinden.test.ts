@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertSahibindenUrl, importSahibindenListing, parseSahibindenHtml } from "./sahibinden.ts";
+import { assertSahibindenUrl, parseSahibindenHtml, parseSahibindenText } from "./sahibinden.ts";
 
 const SAMPLE_HTML = `<!doctype html>
 <html><head>
@@ -28,14 +28,34 @@ const SAMPLE_HTML = `<!doctype html>
 </script>
 </head><body></body></html>`;
 
+const SAMPLE_TEXT = `
+Cep Telefonu
+Apple iPhone 15 Pro 256 GB
+49.999 TL
+Marka
+Apple
+Model
+iPhone 15 Pro
+Dahili Hafıza
+256 GB
+Renk
+Siyah
+Pil Sağlığı
+%92
+Durumu
+İkinci El
+Açıklama
+Cihaz temiz kullanılmıştır. Kutusu mevcuttur.
+`;
+
 test("accepts only HTTPS sahibinden.com URLs", () => {
   assert.equal(assertSahibindenUrl("https://www.sahibinden.com/ilan/123").hostname, "www.sahibinden.com");
   assert.throws(() => assertSahibindenUrl("https://example.com/ilan/123"), /sahibinden\.com/);
   assert.throws(() => assertSahibindenUrl("http://www.sahibinden.com/ilan/123"), /sahibinden\.com/);
 });
 
-test("extracts listing fields and maps the Trove category", () => {
-  const listing = parseSahibindenHtml(SAMPLE_HTML);
+test("extracts listing fields from pasted Sahibinden text", () => {
+  const listing = parseSahibindenText(SAMPLE_TEXT);
 
   assert.equal(listing.title, "Apple iPhone 15 Pro 256 GB");
   assert.equal(listing.brand, "Apple");
@@ -46,14 +66,15 @@ test("extracts listing fields and maps the Trove category", () => {
   assert.equal(listing.batteryHealth, "%92");
   assert.equal(listing.condition, "used");
   assert.equal(listing.categorySlug, "telefon");
+  assert.match(listing.description ?? "", /Kutusu mevcuttur/);
 });
 
-test("imports with an injected fetcher and surfaces source failures", async () => {
-  const listing = await importSahibindenListing("https://www.sahibinden.com/ilan/123", async () => new Response(SAMPLE_HTML, { status: 200 }));
-  assert.equal(listing.price, 49999);
+test("rejects pasted text that is too short", () => {
+  assert.throws(() => parseSahibindenText("iPhone"), /çok kısa/);
+});
 
-  await assert.rejects(
-    importSahibindenListing("https://www.sahibinden.com/ilan/123", async () => new Response("blocked", { status: 403 })),
-    /HTTP 403/,
-  );
+test("keeps HTML parser available for a future authorized source adapter", () => {
+  const listing = parseSahibindenHtml(SAMPLE_HTML);
+  assert.equal(listing.price, 49999);
+  assert.equal(listing.categorySlug, "telefon");
 });

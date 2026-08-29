@@ -11,8 +11,6 @@ export type ImportedListing = {
   categorySlug: "telefon" | "laptop-bilgisayar" | "bilgisayar-parcalari";
 };
 
-type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
-
 type JsonRecord = Record<string, unknown>;
 
 function decodeHtml(value: string): string {
@@ -133,7 +131,7 @@ function inferCategory(text: string): ImportedListing["categorySlug"] {
     return "laptop-bilgisayar";
   }
 
-  throw new Error("Sahibinden ilan kategorisi Trove kategorileriyle eşleştirilemedi.");
+  throw new Error("İlan kategorisi Trove kategorileriyle eşleştirilemedi.");
 }
 
 function inferBrand(title: string, explicit: string | null): string | null {
@@ -162,6 +160,42 @@ function extractBreadcrumbText(values: unknown[]): string {
   return names.join(" ");
 }
 
+function normalizeLabel(value: string): string {
+  return value.toLocaleLowerCase("tr-TR").replace(/[:：]/g, "").replace(/\s+/g, " ").trim();
+}
+
+function fieldFromLines(lines: string[], labels: string[]): string | null {
+  const normalizedLabels = labels.map(normalizeLabel);
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const normalized = normalizeLabel(line);
+
+    for (const label of normalizedLabels) {
+      if (normalized === label) return cleanText(lines[index + 1]);
+      if (normalized.startsWith(`${label} `)) return cleanText(line.slice(label.length));
+    }
+  }
+
+  return null;
+}
+
+function titleFromLines(lines: string[], text: string): string | null {
+  const labeled = fieldFromLines(lines, ["İlan Başlığı", "Başlık"]);
+  if (labeled && labeled.length >= 3) return labeled;
+
+  const terms = ["iphone", "telefon", "samsung", "xiaomi", "macbook", "laptop", "notebook", "bilgisayar", "ekran kartı", "işlemci", "anakart", "ssd"];
+  return lines.find((line) => {
+    const normalized = line.toLocaleLowerCase("tr-TR");
+    return line.length >= 8 && line.length <= 180 && terms.some((term) => normalized.includes(term)) && !/\b(?:tl|₺)\b/i.test(line);
+  }) ?? (text.length <= 180 ? cleanText(text) : null);
+}
+
+function descriptionFromText(text: string): string | null {
+  const match = text.match(/(?:^|\n)\s*(?:açıklama|ilan açıklaması)\s*:?[ \t]*\n?([\s\S]*)$/i);
+  return cleanText(match?.[1])?.slice(0, 6000) ?? null;
+}
+
 export function assertSahibindenUrl(value: string): URL {
   let url: URL;
   try {
@@ -175,6 +209,37 @@ export function assertSahibindenUrl(value: string): URL {
     throw new Error("Yalnızca sahibinden.com ilan linkleri destekleniyor.");
   }
   return url;
+}
+
+export function parseSahibindenText(rawText: string): ImportedListing {
+  const text = rawText.replace(/\r/g, "").trim();
+  if (text.length < 20) throw new Error("Sahibinden ilan metni çok kısa. İlan detaylarını kopyalayıp yapıştırmalısın.");
+
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const title = titleFromLines(lines, text);
+  if (!title) throw new Error("İlan başlığı yapıştırılan metinden belirlenemedi.");
+
+  const brandExplicit = fieldFromLines(lines, ["Marka"]);
+  const model = fieldFromLines(lines, ["Model"]);
+  const storage = fieldFromLines(lines, ["Dahili Hafıza", "Hafıza", "Depolama Kapasitesi", "Depolama"]);
+  const color = fieldFromLines(lines, ["Renk"]);
+  const batteryHealth = fieldFromLines(lines, ["Pil Sağlığı", "Batarya Sağlığı"]);
+  const conditionText = fieldFromLines(lines, ["Durumu", "Cihaz Durumu", "Ürün Durumu"]);
+  const explicitPrice = fieldFromLines(lines, ["Fiyat"]);
+  const priceText = explicitPrice ?? lines.find((line) => /\d[\d.,\s]*\s*(?:TL|₺)\b/i.test(line)) ?? null;
+
+  return {
+    title,
+    brand: inferBrand(title, brandExplicit),
+    model,
+    price: parsePrice(priceText),
+    condition: inferCondition(text, conditionText),
+    storage,
+    color,
+    batteryHealth,
+    description: descriptionFromText(text),
+    categorySlug: inferCategory(text),
+  };
 }
 
 export function parseSahibindenHtml(html: string): ImportedListing {
@@ -211,23 +276,4 @@ export function parseSahibindenHtml(html: string): ImportedListing {
     description,
     categorySlug: inferCategory(categoryText),
   };
-}
-
-export async function importSahibindenListing(sourceUrl: string, fetcher: FetchLike = fetch): Promise<ImportedListing> {
-  const url = assertSahibindenUrl(sourceUrl);
-  const response = await fetcher(url.toString(), {
-    headers: {
-      Accept: "text/html,application/xhtml+xml",
-      "User-Agent": "Mozilla/5.0 (compatible; TroveTeknoloji/1.0; +https://trovemarket.local)",
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Sahibinden ilanı okunamadı (HTTP ${response.status}).`);
-  }
-
-  const html = await response.text();
-  if (!html.trim()) throw new Error("Sahibinden ilanından içerik alınamadı.");
-  return parseSahibindenHtml(html);
 }

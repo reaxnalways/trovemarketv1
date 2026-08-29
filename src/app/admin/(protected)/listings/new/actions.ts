@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isAdminEmail } from "@/modules/auth/admin-access";
-import { importSahibindenListing } from "@/modules/importers/sahibinden";
+import { assertSahibindenUrl, parseSahibindenText } from "@/modules/importers/sahibinden";
 import { buildDraftListing } from "@/modules/listings/create-listing";
 
 function validateImageUrls(imageUrls: string[]): string[] {
@@ -26,7 +26,7 @@ function validateImageUrls(imageUrls: string[]): string[] {
   return normalized;
 }
 
-export async function createImportedDraftListing(sourceUrl: string, imageUrls: string[]) {
+export async function createImportedDraftListing(sourceUrl: string, sourceText: string, imageUrls: string[]) {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -37,8 +37,9 @@ export async function createImportedDraftListing(sourceUrl: string, imageUrls: s
   let images: string[];
   let imported;
   try {
+    assertSahibindenUrl(sourceUrl);
     images = validateImageUrls(imageUrls);
-    imported = await importSahibindenListing(sourceUrl);
+    imported = parseSahibindenText(sourceText);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sahibinden ilanı içe aktarılamadı.";
     redirect(`/admin/listings/new?error=${encodeURIComponent(message)}`);
@@ -77,7 +78,7 @@ export async function createImportedDraftListing(sourceUrl: string, imageUrls: s
     .single();
 
   if (error || !data) {
-    redirect(`/admin/listings/new?error=${encodeURIComponent("İlan bilgileri alındı ancak taslak kaydedilemedi.")}`);
+    redirect(`/admin/listings/new?error=${encodeURIComponent("İlan bilgileri ayrıştırıldı ancak taslak kaydedilemedi.")}`);
   }
 
   redirect(`/admin?created=${encodeURIComponent(data.product_code)}`);

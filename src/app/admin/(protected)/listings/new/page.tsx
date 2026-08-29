@@ -22,7 +22,7 @@ export default async function NewListingPage({ searchParams }: NewListingPagePro
 
       <section className="adminDashboardCard">
         <p className="adminLead">
-          Ürün görsellerini ekle ve Sahibinden ilan linkini yapıştır. Trove gerekli ilan bilgilerini kaynaktan alır ve ilk kaydı taslak olarak oluşturur.
+          Görselleri ekle, Sahibinden linkini gir ve ilan sayfasındaki detayları tek parça kopyalayıp yapıştır. Trove bilgileri otomatik ayırıp taslak ilanı oluşturur.
         </p>
 
         <ListingImportForm
