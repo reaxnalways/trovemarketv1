@@ -2,12 +2,6 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 
-type DetectedBarcode = { rawValue?: string };
-type BarcodeDetectorLike = { detect(source: CanvasImageSource): Promise<DetectedBarcode[]> };
-type BarcodeDetectorCtor = new (options?: { formats?: string[] }) => BarcodeDetectorLike;
-
-declare global { interface Window { BarcodeDetector?: BarcodeDetectorCtor } }
-
 function openCode(rawValue: string) {
   const value = rawValue.trim();
   if (!value) return;
@@ -30,7 +24,8 @@ export function TechnicalServiceScannerClient() {
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); openCode(value); }
 
   async function startCamera() {
-    if (!navigator.mediaDevices?.getUserMedia || !window.BarcodeDetector) {
+    const Detector = window.BarcodeDetector;
+    if (!navigator.mediaDevices?.getUserMedia || !Detector) {
       setMessage("Kamera ile barkod algılama bu tarayıcıda desteklenmiyor. Fiziksel okuyucu veya manuel giriş kullan.");
       return;
     }
@@ -43,7 +38,7 @@ export function TechnicalServiceScannerClient() {
       await video.play();
       setCameraActive(true);
       setMessage("Kamerayı servis barkoduna doğrult.");
-      const detector = new window.BarcodeDetector({ formats: ["code_39", "code_128", "ean_13", "ean_8"] });
+      const detector = new Detector({ formats: ["code_39", "code_128", "ean_13", "ean_8"] });
       const scan = async () => {
         if (!videoRef.current || videoRef.current.readyState < 2) { frameRef.current = requestAnimationFrame(scan); return; }
         try {
