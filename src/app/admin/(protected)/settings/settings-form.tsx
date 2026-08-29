@@ -17,6 +17,15 @@ type SettingsFormProps = {
 };
 
 const MAX_LOGO_BYTES = 1024 * 1024;
+const BRAND_ASSETS_PUBLIC_PATH = "/storage/v1/object/public/brand-assets/";
+
+function getBrandAssetPath(url: string | null) {
+  if (!url) return null;
+  const markerIndex = url.indexOf(BRAND_ASSETS_PUBLIC_PATH);
+  if (markerIndex === -1) return null;
+  const path = url.slice(markerIndex + BRAND_ASSETS_PUBLIC_PATH.length);
+  return path || null;
+}
 
 export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: SettingsFormProps) {
   const [siteName, setSiteName] = useState(initial.siteName);
@@ -25,6 +34,7 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
   const [whatsappDefaultMessage, setWhatsappDefaultMessage] = useState(initial.whatsappDefaultMessage);
   const [logoUrl, setLogoUrl] = useState<string | null>(initial.logoUrl);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [removeLogo, setRemoveLogo] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +45,12 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
     setError(null);
     setStatus(null);
 
+    const supabase = createBrowserClient(supabaseUrl, supabasePublishableKey);
+    const previousLogoUrl = logoUrl;
+    let uploadedPath: string | null = null;
+
     try {
-      let nextLogoUrl = logoUrl;
+      let nextLogoUrl = removeLogo ? null : logoUrl;
 
       if (logoFile) {
         if (logoFile.type !== "image/svg+xml" && !logoFile.name.toLowerCase().endsWith(".svg")) {
@@ -45,16 +59,15 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
         if (logoFile.size > MAX_LOGO_BYTES) throw new Error("SVG logo en fazla 1 MB olabilir.");
 
         setStatus("Logo yükleniyor...");
-        const supabase = createBrowserClient(supabaseUrl, supabasePublishableKey);
-        const path = `logo/trove-logo-${Date.now()}.svg`;
-        const { error: uploadError } = await supabase.storage.from("brand-assets").upload(path, logoFile, {
+        uploadedPath = `logo/trove-logo-${Date.now()}.svg`;
+        const { error: uploadError } = await supabase.storage.from("brand-assets").upload(uploadedPath, logoFile, {
           contentType: "image/svg+xml",
           cacheControl: "3600",
           upsert: false,
         });
         if (uploadError) throw new Error(`Logo yüklenemedi: ${uploadError.message}`);
 
-        const { data } = supabase.storage.from("brand-assets").getPublicUrl(path);
+        const { data } = supabase.storage.from("brand-assets").getPublicUrl(uploadedPath);
         nextLogoUrl = data.publicUrl;
       }
 
@@ -66,10 +79,18 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
         whatsappDefaultMessage,
         logoUrl: nextLogoUrl,
       });
+
+      const previousPath = getBrandAssetPath(previousLogoUrl);
+      if (previousPath && previousLogoUrl !== nextLogoUrl) {
+        await supabase.storage.from("brand-assets").remove([previousPath]);
+      }
+
       setLogoUrl(nextLogoUrl);
       setLogoFile(null);
-      setStatus("Ayarlar kaydedildi. Logo müşteri sayfalarında güncellendi.");
+      setRemoveLogo(false);
+      setStatus(nextLogoUrl ? "Ayarlar kaydedildi. Logo müşteri sayfalarında güncellendi." : "Ayarlar kaydedildi. Logo kaldırıldı.");
     } catch (caught) {
+      if (uploadedPath) await supabase.storage.from("brand-assets").remove([uploadedPath]);
       setError(caught instanceof Error ? caught.message : "Ayarlar kaydedilemedi.");
       setStatus(null);
     } finally {
@@ -77,21 +98,23 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
     }
   }
 
+  const previewUrl = removeLogo ? null : logoUrl;
+
   return (
     <form className="adminImportForm" onSubmit={handleSubmit}>
       {error ? <p className="adminError">{error}</p> : null}
       {status ? <p className="adminStatus">{status}</p> : null}
 
       <div className="adminLogoPreview" style={{ minHeight: 96, display: "flex", alignItems: "center" }}>
-        {logoUrl ? (
+        {previewUrl ? (
           <img
-            src={logoUrl}
+            src={previewUrl}
             alt="Mevcut site logosu"
             width={180}
             height={72}
             style={{ width: "auto", height: "auto", maxWidth: 180, maxHeight: 72, objectFit: "contain", display: "block" }}
           />
-        ) : <span>Henüz logo yok</span>}
+        ) : <span>{removeLogo ? "Logo kaydedildiğinde kaldırılacak" : "Henüz logo yok"}</span>}
       </div>
 
       <label className="adminField adminUploadBox">
@@ -99,11 +122,30 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
         <input
           accept="image/svg+xml,.svg"
           disabled={busy}
-          onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
+          onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            setLogoFile(file);
+            if (file) setRemoveLogo(false);
+          }}
           type="file"
         />
         <small>Yalnızca SVG, en fazla 1 MB. Kaydettiğinde header ve müşteri sayfalarında kullanılır.</small>
       </label>
+
+      {logoUrl ? (
+        <label className="adminField" style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <input
+            checked={removeLogo}
+            disabled={busy}
+            onChange={(event) => {
+              setRemoveLogo(event.target.checked);
+              if (event.target.checked) setLogoFile(null);
+            }}
+            type="checkbox"
+          />
+          Mevcut logoyu kaldır
+        </label>
+      ) : null}
 
       <label className="adminField">
         Site adı
