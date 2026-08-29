@@ -3,7 +3,7 @@ export type PublicSupabaseConfig = {
   publishableKey: string;
 };
 
-type PublicSupabaseEnvironment = {
+type PublicSupabaseEnvironment = Record<string, string | undefined> & {
   NEXT_PUBLIC_SUPABASE_URL?: string;
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
 };
