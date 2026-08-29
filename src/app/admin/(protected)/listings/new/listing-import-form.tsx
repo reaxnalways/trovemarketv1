@@ -79,7 +79,7 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
         imageUrls.push(data.publicUrl);
       }
 
-      setStatus("İlan metni ayrıştırılıyor ve taslak oluşturuluyor...");
+      setStatus("Bilgiler ayrıştırılıyor, taslak hazırlanıyor ve kontrol ekranı açılıyor...");
       await createImportedDraftListing(sourceUrl.trim(), sourceText.trim(), imageUrls);
     } catch (error) {
       setBusy(false);
@@ -91,10 +91,11 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
   return (
     <form className="adminImportForm" onSubmit={handleSubmit}>
       <div className="adminFlowSteps" aria-label="İlan oluşturma adımları">
-        <span>1. Görseller</span>
-        <span>2. Link</span>
-        <span>3. İlan metni</span>
-        <span>4. Ayrıştır & kaydet</span>
+        <span>1. Görsel yükle</span>
+        <span>2. Sahibinden linki</span>
+        <span>3. Bilgileri ayır</span>
+        <span>4. Kontrol et</span>
+        <span>5. Yayınla</span>
       </div>
 
       {initialError ? <p className="adminError">{initialError}</p> : null}
@@ -134,11 +135,11 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
           rows={12}
           value={sourceText}
         />
-        <small>Tek tek alan doldurma: ilan detaylarını topluca yapıştır, Trove gerekli bilgileri ayırır.</small>
+        <small>Pil sağlığı ve cihaz kayıt bilgisi metinde varsa Trove bunları da ayırmaya çalışır. Taslak kaydedildikten sonra tüm alanları kontrol edebilirsin.</small>
       </label>
 
       <button className="adminButton adminImportButton" disabled={busy} type="submit">
-        {busy ? "İşleniyor..." : "Bilgileri Ayrıştır ve Taslak Oluştur"}
+        {busy ? "İşleniyor..." : "Taslak Oluştur ve Kontrol Et"}
       </button>
     </form>
   );
