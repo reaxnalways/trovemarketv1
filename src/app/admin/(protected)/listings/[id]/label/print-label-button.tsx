@@ -24,9 +24,41 @@ export function PrintLabelButton() {
 ${styles}
 <style>
 @page { size: 60mm 40mm; margin: 0; }
-html, body { width: 60mm !important; height: 40mm !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff !important; }
-body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-.troveThermalLabel { width: 60mm !important; height: 40mm !important; margin: 0 !important; box-shadow: none !important; }
+* { box-sizing: border-box !important; }
+html, body {
+  width: 60mm !important;
+  height: 40mm !important;
+  min-width: 60mm !important;
+  min-height: 40mm !important;
+  max-width: 60mm !important;
+  max-height: 40mm !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #fff !important;
+}
+body {
+  position: relative !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+.troveThermalLabel {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 60mm !important;
+  height: 40mm !important;
+  min-width: 60mm !important;
+  min-height: 40mm !important;
+  max-width: 60mm !important;
+  max-height: 40mm !important;
+  margin: 0 !important;
+  transform: none !important;
+  zoom: 1 !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
 </style>
 </head>
 <body>${label.outerHTML}</body>
