@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { listPublicCategories } from "../modules/categories/repository";
-import {
-  listFeaturedListings,
-  listRecentListings,
-} from "../modules/listings/repository";
+import { listFeaturedListings, listRecentListings } from "../modules/listings/repository";
 import { formatListingPrice } from "../modules/listings/public-listings";
 
 const categoryDescriptions: Record<string, string> = {
@@ -30,10 +27,11 @@ export default async function HomePage() {
 
       <section className="categories" aria-label="Ana kategoriler">
         {categories.map((category) => (
-          <article className="card" key={category.id}>
+          <Link className="card categoryLink" href={`/kategori/${category.slug}`} key={category.id}>
             <h2>{category.name}</h2>
             <p>{category.description ?? categoryDescriptions[category.slug] ?? "Kategoriyi görüntüle"}</p>
-          </article>
+            <span>Kategoriyi aç →</span>
+          </Link>
         ))}
       </section>
 
