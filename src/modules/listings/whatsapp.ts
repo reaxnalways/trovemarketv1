@@ -1,4 +1,5 @@
-export function buildListingWhatsAppUrl(productCode: string, title: string): string {
+export function buildListingWhatsAppUrl(productCode: string, title: string, whatsappNumber?: string | null): string {
   const message = `Merhaba Trove Teknoloji, ${productCode} kodlu ${title} ilanı hakkında bilgi almak istiyorum.`;
-  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+  const digits = whatsappNumber?.replace(/\D/g, "") ?? "";
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
