@@ -11,10 +11,10 @@ export default async function AdminListingsPage() {
     .limit(100);
 
   return (
-    <main className="adminShell">
+    <main className="adminShell adminShellWide">
       <div className="adminPageHeader">
         <div><p className="eyebrow">İLAN YÖNETİMİ</p><h1 className="adminPageTitle">Tüm ilanlar</h1></div>
-        <Link className="adminButton adminActionLink" href="/admin/listings/new">Yeni ilan</Link>
+        <div className="adminTopbarActions"><Link className="adminButton adminButtonSecondary" href="/admin/scan">Barkod tara</Link><Link className="adminButton adminActionLink" href="/admin/listings/new">Yeni ilan</Link></div>
       </div>
       <div className="adminToolbar">
         <Link className="adminTextLink" href="/admin">← Panele dön</Link>
@@ -25,7 +25,7 @@ export default async function AdminListingsPage() {
           <article className="adminProductRow" key={product.id}>
             <div className="adminProductMain">
               <span className="productCode">{product.product_code}</span>
-              <strong>{product.title}</strong>
+              <Link className="adminProductTitleLink" href={`/admin/listings/${product.id}`}>{product.title}</Link>
               <small>{[product.brand, product.model].filter(Boolean).join(" · ") || "Ürün bilgisi"}</small>
             </div>
             <div className="adminProductMeta">
@@ -34,12 +34,15 @@ export default async function AdminListingsPage() {
               <span>{product.publication_status === "published" ? "Yayında" : product.publication_status === "hidden" ? "Gizli" : "Taslak"}</span>
               {product.is_featured ? <span>Öne çıkan</span> : null}
             </div>
-            <form className="adminInlineActions" action={updateListingStatus}>
-              <input type="hidden" name="productId" value={product.id} />
-              <button name="action" value={product.publication_status === "published" ? "hide" : "publish"} className="adminButton adminButtonSecondary" type="submit">{product.publication_status === "published" ? "Gizle" : "Yayınla"}</button>
-              <button name="action" value={product.stock_status === "sold" ? "in_stock" : "sold"} className="adminButton adminButtonSecondary" type="submit">{product.stock_status === "sold" ? "Stokta yap" : "Satıldı"}</button>
-              <button name="action" value={product.is_featured ? "unfeature" : "feature"} className="adminButton adminButtonSecondary" type="submit">{product.is_featured ? "Öne çıkarmayı kaldır" : "Öne çıkar"}</button>
-            </form>
+            <div className="adminInlineActions">
+              <Link className="adminButton adminButtonSecondary" href={`/admin/listings/${product.id}`}>Düzenle</Link>
+              <form action={updateListingStatus} className="adminInlineActions">
+                <input type="hidden" name="productId" value={product.id} />
+                <button name="action" value={product.publication_status === "published" ? "hide" : "publish"} className="adminButton adminButtonSecondary" type="submit">{product.publication_status === "published" ? "Gizle" : "Yayınla"}</button>
+                <button name="action" value={product.stock_status === "sold" ? "in_stock" : "sold"} className="adminButton adminButtonSecondary" type="submit">{product.stock_status === "sold" ? "Stokta yap" : "Satıldı"}</button>
+                <button name="action" value={product.is_featured ? "unfeature" : "feature"} className="adminButton adminButtonSecondary" type="submit">{product.is_featured ? "Öne çıkarmayı kaldır" : "Öne çıkar"}</button>
+              </form>
+            </div>
           </article>
         )) : <p className="emptyState">Henüz ürün yok.</p>}
       </section>
