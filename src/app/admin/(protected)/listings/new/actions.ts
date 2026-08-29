@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isAdminEmail } from "@/modules/auth/admin-access";
 import { inferDeviceRegion } from "@/modules/importers/device-registration";
-import { assertSahibindenUrl, parseSahibindenText } from "@/modules/importers/sahibinden";
+import { importSahibindenListing } from "@/modules/importers/sahibinden-source";
 import { buildDraftListing } from "@/modules/listings/create-listing";
 
 function validateImageUrls(imageUrls: string[]): string[] {
@@ -93,9 +93,9 @@ export async function createImportedDraftListing(sourceUrl: string, sourceText: 
   let images: string[];
   let imported;
   try {
-    assertSahibindenUrl(sourceUrl);
     images = validateImageUrls(imageUrls);
-    imported = parseSahibindenText(sourceText);
+    const result = await importSahibindenListing(sourceUrl, sourceText);
+    imported = result.listing;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sahibinden ilanı içe aktarılamadı.";
     redirect(`/admin/listings/new?error=${encodeURIComponent(message)}`);
@@ -112,6 +112,7 @@ export async function createImportedDraftListing(sourceUrl: string, sourceText: 
     redirect(`/admin/listings/new?error=${encodeURIComponent("İlan kategorisi Trove tarafında bulunamadı.")}`);
   }
 
+  const sourceForRegion = [sourceText, imported.title, imported.description ?? ""].filter(Boolean).join("\n");
   const listing = buildDraftListing({
     categoryId: category.id,
     title: imported.title,
@@ -122,7 +123,7 @@ export async function createImportedDraftListing(sourceUrl: string, sourceText: 
     storage: imported.storage ?? undefined,
     color: imported.color ?? undefined,
     batteryHealth: imported.batteryHealth ?? undefined,
-    deviceRegion: inferDeviceRegion(sourceText) ?? undefined,
+    deviceRegion: inferDeviceRegion(sourceForRegion) ?? undefined,
     description: imported.description ?? undefined,
     sourceUrl,
     images,
