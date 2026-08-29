@@ -50,7 +50,7 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
           <label className="adminField">Hafıza<input name="storage" defaultValue={product.storage ?? ""} /></label>
           <label className="adminField">Renk<input name="color" defaultValue={product.color ?? ""} /></label>
           <label className="adminField">Pil sağlığı (%)<input name="batteryHealth" type="number" min="0" max="100" defaultValue={product.battery_health ?? ""} /></label>
-          <label className="adminField">Cihaz bölgesi<select name="deviceRegion" defaultValue={product.device_region ?? ""}><option value="">Belirtilmedi</option><option value="tr">TR Cihaz</option><option value="international">Yurt Dışı</option></select></label>
+          <label className="adminField">Cihaz kayıt türü<select name="deviceRegion" defaultValue={product.device_region ?? ""}><option value="">Belirtilmedi</option><option value="tr">Türkiye cihazı (TC)</option><option value="passport">Pasaport kayıtlı (PK)</option><option value="international">Yurt dışı (YD)</option></select></label>
           <label className="adminField">Stok<select name="stockStatus" defaultValue={product.stock_status}><option value="in_stock">Stokta</option><option value="reserved">Rezerve</option><option value="sold">Satıldı</option><option value="out_of_stock">Stok dışı</option></select></label>
           <label className="adminField">Yayın<select name="publicationStatus" defaultValue={product.publication_status}><option value="draft">Taslak</option><option value="published">Yayında</option><option value="hidden">Gizli</option></select></label>
           <label className="adminField adminFieldWide">Kaynak URL<input name="sourceUrl" defaultValue={product.source_url ?? ""} /></label>
