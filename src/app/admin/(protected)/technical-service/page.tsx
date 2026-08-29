@@ -12,6 +12,7 @@ type TechnicalServicePageProps = {
     updated?: string;
     deleted?: string;
     error?: string;
+    q?: string;
   }>;
 };
 
@@ -22,14 +23,39 @@ function formatMoney(value: number | string) {
   })} ₺`;
 }
 
+function normalizeSearch(value: string) {
+  return value.toLocaleLowerCase("tr-TR").replace(/\s+/g, " ").trim();
+}
+
 export default async function TechnicalServicePage({ searchParams }: TechnicalServicePageProps) {
-  const { created, updated, deleted, error } = await searchParams;
+  const { created, updated, deleted, error, q } = await searchParams;
+  const search = normalizeSearch(q ?? "");
   const supabase = await createSupabaseServerClient();
-  const { data: records } = await supabase
+  const { data } = await supabase
     .from("technical_service_records")
     .select("id,first_name,last_name,phone,damage_cost,labor_cost,amount_paid,created_at,updated_at")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(500);
+
+  const allRecords = data ?? [];
+  const records = search
+    ? allRecords.filter((record) => {
+        const searchable = normalizeSearch(`${record.first_name} ${record.last_name} ${record.phone}`);
+        return searchable.includes(search);
+      })
+    : allRecords.slice(0, 100);
+
+  const totals = records.reduce(
+    (summary, record) => {
+      summary.damage += Number(record.damage_cost);
+      summary.labor += Number(record.labor_cost);
+      summary.paid += Number(record.amount_paid);
+      return summary;
+    },
+    { damage: 0, labor: 0, paid: 0 },
+  );
+  const totalCost = totals.damage + totals.labor;
+  const netDifference = totals.paid - totalCost;
 
   return (
     <main className="adminShell">
@@ -91,17 +117,53 @@ export default async function TechnicalServicePage({ searchParams }: TechnicalSe
       <section className="listingSection">
         <div className="sectionHeading">
           <div>
-            <p className="eyebrow">SON KAYITLAR</p>
+            <p className="eyebrow">KAYIT YÖNETİMİ</p>
             <h2>Teknik servis kayıtları</h2>
           </div>
-          <p>Son 100 servis kaydı gösterilir. Her kayıt düzenlenebilir veya silinebilir.</p>
+          <p>Ad, soyad veya telefon numarası ile kayıt bulabilirsin.</p>
         </div>
 
-        {records?.length ? (
+        <form method="get" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
+          <label className="adminField" style={{ flex: "1 1 280px" }}>
+            Kayıt ara
+            <input name="q" type="search" defaultValue={q ?? ""} placeholder="Ad, soyad veya telefon" />
+          </label>
+          <div className="adminFormActions" style={{ alignItems: "end", gap: 10, flexWrap: "wrap" }}>
+            <button className="adminButton" type="submit">Ara</button>
+            {search ? <Link className="adminButton adminButtonSecondary" href="/admin/technical-service">Temizle</Link> : null}
+          </div>
+        </form>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 22 }}>
+          <div className="adminDashboardCard" style={{ padding: 18 }}>
+            <small style={{ color: "#838da2" }}>Gösterilen kayıt</small>
+            <strong style={{ display: "block", marginTop: 6, fontSize: "1.35rem" }}>{records.length}</strong>
+          </div>
+          <div className="adminDashboardCard" style={{ padding: 18 }}>
+            <small style={{ color: "#838da2" }}>Toplam maliyet + işçilik</small>
+            <strong style={{ display: "block", marginTop: 6, fontSize: "1.35rem" }}>{formatMoney(totalCost)}</strong>
+          </div>
+          <div className="adminDashboardCard" style={{ padding: 18 }}>
+            <small style={{ color: "#838da2" }}>Toplam alınan</small>
+            <strong style={{ display: "block", marginTop: 6, fontSize: "1.35rem" }}>{formatMoney(totals.paid)}</strong>
+          </div>
+          <div className="adminDashboardCard" style={{ padding: 18 }}>
+            <small style={{ color: "#838da2" }}>Net fark</small>
+            <strong style={{ display: "block", marginTop: 6, fontSize: "1.35rem" }}>{formatMoney(netDifference)}</strong>
+          </div>
+        </div>
+
+        {search ? (
+          <p className="adminStatus" style={{ marginBottom: 18 }}>
+            “{q}” araması için {records.length} kayıt bulundu.
+          </p>
+        ) : null}
+
+        {records.length ? (
           <div className="adminDraftList">
             {records.map((record) => {
-              const totalCost = Number(record.damage_cost) + Number(record.labor_cost);
-              const netDifference = Number(record.amount_paid) - totalCost;
+              const recordTotalCost = Number(record.damage_cost) + Number(record.labor_cost);
+              const recordNetDifference = Number(record.amount_paid) - recordTotalCost;
 
               return (
                 <article className="adminDraftItem" key={record.id}>
@@ -112,7 +174,7 @@ export default async function TechnicalServicePage({ searchParams }: TechnicalSe
                       Maliyet: {formatMoney(record.damage_cost)} · İşçilik: {formatMoney(record.labor_cost)} · Verilen: {formatMoney(record.amount_paid)}
                     </p>
                     <p>
-                      Toplam maliyet: <strong>{formatMoney(totalCost)}</strong> · Net fark: <strong>{formatMoney(netDifference)}</strong>
+                      Toplam maliyet: <strong>{formatMoney(recordTotalCost)}</strong> · Net fark: <strong>{formatMoney(recordNetDifference)}</strong>
                     </p>
                     <small>
                       Kayıt: {new Date(record.created_at).toLocaleString("tr-TR")}
@@ -172,7 +234,7 @@ export default async function TechnicalServicePage({ searchParams }: TechnicalSe
             })}
           </div>
         ) : (
-          <p className="emptyState">Henüz teknik servis kaydı yok.</p>
+          <p className="emptyState">{search ? "Aramana uygun teknik servis kaydı bulunamadı." : "Henüz teknik servis kaydı yok."}</p>
         )}
       </section>
     </main>
