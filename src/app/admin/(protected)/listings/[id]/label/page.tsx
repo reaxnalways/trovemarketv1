@@ -1,32 +1,25 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Code39Barcode } from "@/components/code39-barcode";
+import { Code128Barcode } from "@/components/code128-barcode";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { PrintLabelButton } from "./print-label-button";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ size?: string }>;
 };
 
-const labelSizes = {
-  "60x40": { label: "60 × 40 mm", className: "productLabel60x40" },
-  "50x30": { label: "50 × 30 mm", className: "productLabel50x30" },
-} as const;
-
-type LabelSize = keyof typeof labelSizes;
-
-function conditionLabel(value: string | null) {
-  if (value === "new") return "Sıfır";
-  if (value === "used") return "İkinci el";
-  if (value === "refurbished") return "Yenilenmiş";
-  return null;
+function colorSwatchClass(color: string | null) {
+  const normalized = color?.trim().toLocaleLowerCase("tr-TR") ?? "";
+  if (normalized.includes("mavi") || normalized.includes("blue")) return "labelColorBlue";
+  if (normalized.includes("kırmızı") || normalized.includes("red")) return "labelColorRed";
+  if (normalized.includes("yeşil") || normalized.includes("green")) return "labelColorGreen";
+  if (normalized.includes("beyaz") || normalized.includes("white")) return "labelColorWhite";
+  if (normalized.includes("gri") || normalized.includes("gray") || normalized.includes("grey")) return "labelColorGray";
+  return "labelColorBlack";
 }
 
-export default async function ProductLabelPage({ params, searchParams }: Props) {
+export default async function ProductLabelPage({ params }: Props) {
   const { id } = await params;
-  const { size } = await searchParams;
-  const selectedSize: LabelSize = size === "50x30" ? "50x30" : "60x40";
   const supabase = await createSupabaseServerClient();
 
   const [{ data: product }, { data: settings }] = await Promise.all([
@@ -44,21 +37,18 @@ export default async function ProductLabelPage({ params, searchParams }: Props) 
 
   if (!product) notFound();
 
-  const barcode = product.barcode || product.product_code;
+  const barcodeValue = product.product_code;
   const productName = [product.brand, product.model].filter(Boolean).join(" ") || product.title;
-  const attributes = [
-    product.storage,
-    product.color,
-    product.battery_health == null ? null : `Pil %${product.battery_health}`,
-    conditionLabel(product.condition),
-  ].filter(Boolean);
+  const storage = product.storage || "—";
+  const battery = product.battery_health == null ? "—" : `%${product.battery_health}`;
+  const color = product.color || "—";
 
   return (
     <main className="adminShell adminLabelPage">
       <header className="adminPageHeader adminPrintOnlyHidden">
         <div>
-          <p className="eyebrow">ÜRÜN ETİKETİ</p>
-          <h1 className="adminPageTitle">{product.product_code}</h1>
+          <p className="eyebrow">ZJIONG ZJ-9210</p>
+          <h1 className="adminPageTitle">60 × 40 mm Ürün Etiketi</h1>
         </div>
         <div className="adminInlineActions">
           <Link className="adminButton adminButtonSecondary" href={`/admin/listings/${product.id}`}>Ürüne dön</Link>
@@ -67,41 +57,49 @@ export default async function ProductLabelPage({ params, searchParams }: Props) 
       </header>
 
       <section className="adminDashboardCard adminLabelControls adminPrintOnlyHidden">
-        <strong>Etiket ölçüsü</strong>
-        <div className="adminInlineActions">
-          {(Object.keys(labelSizes) as LabelSize[]).map((key) => (
-            <Link
-              className={`adminButton ${selectedSize === key ? "" : "adminButtonSecondary"}`}
-              href={`/admin/listings/${product.id}/label?size=${key}`}
-              key={key}
-            >
-              {labelSizes[key].label}
-            </Link>
-          ))}
-        </div>
-        <p>Yazdırma ekranında ölçeği %100 kullan. Barkod değeri doğrudan ürünün veritabanındaki barkod alanından gelir.</p>
+        <strong>Yazıcı ayarı</strong>
+        <p>ZJIONG ZJ-9210 için kağıt boyutunu 60 × 40 mm, ölçeği %100 ve kenar boşluklarını yok olarak seç. Barkod Code 128 formatında ve veritabanındaki 11 haneli ürün kodundan üretilir.</p>
       </section>
 
       <div className="adminLabelPreview">
-        <article className={`productLabel ${labelSizes[selectedSize].className}`}>
-          <div className="productLabelBrand">
-            {settings?.logo_url ? <img src={settings.logo_url} alt="" /> : <span className="productLabelLogoFallback">T</span>}
-            <div>
-              <strong>{settings?.site_name || "Trove Teknoloji"}</strong>
-              <small>Ürün Etiketi</small>
+        <article className="troveThermalLabel">
+          <div className="troveLabelTitle">{productName}</div>
+          <div className="troveLabelDivider"><span /></div>
+
+          <div className="troveLabelSpecs">
+            <div className="troveLabelSpec">
+              <strong>{storage}</strong>
+              <span>DEPOLAMA</span>
+            </div>
+
+            <div className="troveLabelSpec troveBatterySpec">
+              <div className="troveBatteryIcon" aria-hidden="true"><i /><i /><i /><i /></div>
+              <div>
+                <strong>{battery}</strong>
+                <span>PİL</span>
+              </div>
+            </div>
+
+            <div className="troveLabelSpec troveColorSpec">
+              <span className={`troveColorDot ${colorSwatchClass(product.color)}`} aria-hidden="true" />
+              <div>
+                <strong>{color.toLocaleUpperCase("tr-TR")}</strong>
+                <span>RENK</span>
+              </div>
             </div>
           </div>
 
-          <div className="productLabelProduct">
-            <strong>{productName}</strong>
-            {attributes.length ? <span>{attributes.join(" • ")}</span> : null}
+          <div className="troveLabelRule" />
+
+          <div className="troveBarcodeArea">
+            <Code128Barcode value={barcodeValue} height={66} />
           </div>
 
-          <Code39Barcode value={barcode} height={58} narrow={1.8} />
-
-          <div className="productLabelFooter">
-            <strong>{product.product_code}</strong>
-            {product.price == null ? <span>Fiyat belirtilmedi</span> : <span>{Number(product.price).toLocaleString("tr-TR")} ₺</span>}
+          <div className="troveLabelBottom">
+            <strong className="troveProductCode">{product.product_code}</strong>
+            <div className="troveLabelBrand">
+              {settings?.logo_url ? <img src={settings.logo_url} alt={settings?.site_name || "Trove Teknoloji"} /> : <strong>TROVE</strong>}
+            </div>
           </div>
         </article>
       </div>
