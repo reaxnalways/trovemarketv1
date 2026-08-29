@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SiteHeader } from "../../../components/site-header";
 import { formatListingPrice } from "../../../modules/listings/public-listings";
 import { getPublicListingByProductCode } from "../../../modules/listings/repository";
 import { buildListingWhatsAppUrl } from "../../../modules/listings/whatsapp";
+import { getPublicSiteSettings } from "../../../modules/settings/public-settings";
 
 type ListingDetailPageProps = { params: Promise<{ productCode: string }> };
 
@@ -11,7 +13,10 @@ const stockLabels = { in_stock: "Stokta", reserved: "Rezerve", sold: "Satıldı"
 
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { productCode } = await params;
-  const listing = await getPublicListingByProductCode(productCode);
+  const [listing, settings] = await Promise.all([
+    getPublicListingByProductCode(productCode),
+    getPublicSiteSettings(),
+  ]);
   if (!listing) notFound();
 
   const details = [
@@ -25,23 +30,26 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   ].filter((item) => item[1]);
 
   return (
-    <main className="shell listingDetailShell">
-      <Link className="backLink" href="/">← Ana sayfaya dön</Link>
-      <div className="listingDetailGrid">
-        <section className="listingGallery">
-          {listing.images.length ? listing.images.map((image, index) => (
-            <img alt={`${listing.title} - ${index + 1}`} className="detailImage" key={image} src={image} />
-          )) : <div className="detailImagePlaceholder">TROVE</div>}
-        </section>
-        <section className="listingDetailCard">
-          <span className="productCode">{listing.product_code}</span>
-          <h1 className="listingDetailTitle">{listing.title}</h1>
-          <strong className="listingDetailPrice">{formatListingPrice(listing.price)}</strong>
-          {details.length ? <dl className="listingSpecs">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : null}
-          <a className="adminButton adminActionLink" href={buildListingWhatsAppUrl(listing.product_code, listing.title)}>WhatsApp ile bilgi al</a>
-          {listing.description ? <div className="listingDescription"><h2>Açıklama</h2><p>{listing.description}</p></div> : null}
-        </section>
-      </div>
-    </main>
+    <>
+      <SiteHeader settings={settings} />
+      <main className="shell listingDetailShell">
+        <Link className="backLink" href="/">← Ana sayfaya dön</Link>
+        <div className="listingDetailGrid">
+          <section className="listingGallery">
+            {listing.images.length ? listing.images.map((image, index) => (
+              <img alt={`${listing.title} - ${index + 1}`} className="detailImage" key={image} src={image} />
+            )) : <div className="detailImagePlaceholder">TROVE</div>}
+          </section>
+          <section className="listingDetailCard">
+            <span className="productCode">{listing.product_code}</span>
+            <h1 className="listingDetailTitle">{listing.title}</h1>
+            <strong className="listingDetailPrice">{formatListingPrice(listing.price)}</strong>
+            {details.length ? <dl className="listingSpecs">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : null}
+            <a className="adminButton adminActionLink" href={buildListingWhatsAppUrl(listing.product_code, listing.title)}>WhatsApp ile bilgi al</a>
+            {listing.description ? <div className="listingDescription"><h2>Açıklama</h2><p>{listing.description}</p></div> : null}
+          </section>
+        </div>
+      </main>
+    </>
   );
 }
