@@ -88,7 +88,8 @@ export async function updateTechnicalServiceRecord(formData: FormData) {
   const { error } = await supabase
     .from("technical_service_records")
     .update(payload)
-    .eq("id", recordId);
+    .eq("id", recordId)
+    .is("archived_at", null);
 
   if (error) {
     redirect(`/admin/technical-service?error=${encodeURIComponent("Servis kaydı güncellenemedi.")}`);
@@ -97,22 +98,51 @@ export async function updateTechnicalServiceRecord(formData: FormData) {
   redirect("/admin/technical-service?updated=1");
 }
 
-export async function deleteTechnicalServiceRecord(formData: FormData) {
+export async function archiveTechnicalServiceRecord(formData: FormData) {
+  const { supabase, user } = await getAdminContext();
+
+  let recordId: string;
+  try {
+    recordId = requiredId(formData);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Servis kaydı arşivlenemedi.";
+    redirect(`/admin/technical-service?error=${encodeURIComponent(message)}`);
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("technical_service_records")
+    .update({ archived_at: now, archived_by: user.id, updated_at: now })
+    .eq("id", recordId)
+    .is("archived_at", null);
+
+  if (error) {
+    redirect(`/admin/technical-service?error=${encodeURIComponent("Servis kaydı arşivlenemedi.")}`);
+  }
+
+  redirect("/admin/technical-service?archived=1");
+}
+
+export async function restoreTechnicalServiceRecord(formData: FormData) {
   const { supabase } = await getAdminContext();
 
   let recordId: string;
   try {
     recordId = requiredId(formData);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Servis kaydı silinemedi.";
+    const message = error instanceof Error ? error.message : "Servis kaydı geri yüklenemedi.";
     redirect(`/admin/technical-service?error=${encodeURIComponent(message)}`);
   }
 
-  const { error } = await supabase.from("technical_service_records").delete().eq("id", recordId);
+  const { error } = await supabase
+    .from("technical_service_records")
+    .update({ archived_at: null, archived_by: null, updated_at: new Date().toISOString() })
+    .eq("id", recordId)
+    .not("archived_at", "is", null);
 
   if (error) {
-    redirect(`/admin/technical-service?error=${encodeURIComponent("Servis kaydı silinemedi.")}`);
+    redirect(`/admin/technical-service?error=${encodeURIComponent("Servis kaydı geri yüklenemedi.")}`);
   }
 
-  redirect("/admin/technical-service?deleted=1");
+  redirect("/admin/technical-service?restored=1");
 }
