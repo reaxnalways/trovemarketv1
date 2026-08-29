@@ -38,6 +38,14 @@ function validateProductImages(imageUrls: string[]) {
   return images;
 }
 
+function revalidateProductPaths(productId: string) {
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/listings");
+  revalidatePath(`/admin/listings/${productId}`);
+  revalidatePath(`/admin/listings/${productId}/label`);
+}
+
 export async function updateListingImages(productId: string, imageUrls: string[]) {
   const normalizedProductId = productId.trim();
   if (!normalizedProductId) throw new Error("Ürün kimliği eksik.");
@@ -46,10 +54,7 @@ export async function updateListingImages(productId: string, imageUrls: string[]
   const { error } = await supabase.from("products").update({ images }).eq("id", normalizedProductId);
   if (error) throw new Error("Ürün görselleri kaydedilemedi.");
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/listings");
-  revalidatePath(`/admin/listings/${normalizedProductId}`);
+  revalidateProductPaths(normalizedProductId);
 }
 
 export async function updateListing(formData: FormData) {
@@ -62,10 +67,15 @@ export async function updateListing(formData: FormData) {
   const price = rawPrice === null ? null : Number(rawPrice.replace(",", "."));
   const batteryHealth = rawBattery === null ? null : Number(rawBattery);
   const deviceRegion = optional(formData.get("deviceRegion"));
+  const intent = optional(formData.get("actionIntent"));
 
   if (price !== null && (!Number.isFinite(price) || price < 0)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz fiyat.")}`);
   if (batteryHealth !== null && (!Number.isInteger(batteryHealth) || batteryHealth < 0 || batteryHealth > 100)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Pil sağlığı 0-100 arasında olmalıdır.")}`);
   if (deviceRegion !== null && !["tr", "passport", "international"].includes(deviceRegion)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz cihaz kayıt türü.")}`);
+
+  const publicationStatus = intent === "publish"
+    ? "published"
+    : optional(formData.get("publicationStatus")) ?? "draft";
 
   const updates = {
     title,
@@ -80,7 +90,7 @@ export async function updateListing(formData: FormData) {
     description: optional(formData.get("description")),
     source_url: optional(formData.get("sourceUrl")),
     stock_status: optional(formData.get("stockStatus")) ?? "in_stock",
-    publication_status: optional(formData.get("publicationStatus")) ?? "draft",
+    publication_status: publicationStatus,
     is_featured: formData.get("isFeatured") === "on",
   };
 
@@ -88,12 +98,40 @@ export async function updateListing(formData: FormData) {
   const { error } = await supabase.from("products").update(updates).eq("id", productId);
   if (error) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Ürün kaydedilemedi.")}`);
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/listings");
-  revalidatePath(`/admin/listings/${productId}`);
-  revalidatePath(`/admin/listings/${productId}/label`);
-  redirect(`/admin/listings/${productId}?saved=1`);
+  revalidateProductPaths(productId);
+  redirect(`/admin/listings/${productId}?saved=1${intent === "publish" ? "&published=1" : ""}`);
+}
+
+export async function quickUpdateListingStatus(formData: FormData) {
+  const productId = optional(formData.get("productId"));
+  const intent = optional(formData.get("quickIntent"));
+  if (!productId || !intent) return;
+
+  let updates: { stock_status?: string; publication_status?: string };
+  let result = "updated";
+
+  if (intent === "sold") {
+    updates = { stock_status: "sold" };
+    result = "sold";
+  } else if (intent === "hide") {
+    updates = { publication_status: "hidden" };
+    result = "hidden";
+  } else if (intent === "in_stock") {
+    updates = { stock_status: "in_stock" };
+    result = "in_stock";
+  } else if (intent === "publish") {
+    updates = { publication_status: "published" };
+    result = "published";
+  } else {
+    redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz hızlı işlem.")}`);
+  }
+
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("products").update(updates).eq("id", productId);
+  if (error) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Hızlı işlem uygulanamadı.")}`);
+
+  revalidateProductPaths(productId);
+  redirect(`/admin/listings/${productId}?quick=${result}`);
 }
 
 export async function deleteListing(formData: FormData) {
