@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { PublicSiteSettings } from "../modules/settings/public-settings";
+import { FALLBACK_SITE_SETTINGS, type PublicSiteSettings } from "../modules/settings/public-settings";
 
 const navigation = [
   { href: "/kategori/telefon", label: "Telefon" },
@@ -9,10 +9,10 @@ const navigation = [
 ];
 
 type SiteHeaderProps = {
-  settings: PublicSiteSettings;
+  settings?: PublicSiteSettings;
 };
 
-export function SiteHeader({ settings }: SiteHeaderProps) {
+export function SiteHeader({ settings = FALLBACK_SITE_SETTINGS }: SiteHeaderProps = {}) {
   const siteName = settings.site_name || "Trove Teknoloji";
 
   return (
@@ -25,14 +25,7 @@ export function SiteHeader({ settings }: SiteHeaderProps) {
               alt={siteName + " logo"}
               width={36}
               height={36}
-              style={{
-                width: 36,
-                height: 36,
-                maxWidth: 36,
-                flex: "0 0 36px",
-                objectFit: "contain",
-                display: "block",
-              }}
+              style={{ width: 36, height: 36, maxWidth: 36, flex: "0 0 36px", objectFit: "contain", display: "block" }}
             />
           ) : (
             <span className="siteBrandMark">T</span>
