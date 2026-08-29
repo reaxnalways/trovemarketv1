@@ -8,7 +8,7 @@ const navGroups = [
       { label: "Tüm ilanlar", href: "/admin/listings" },
       { label: "Yeni ilan oluştur", href: "/admin/listings/new" },
       { label: "Barkod tara", href: "/admin/scan" },
-      { label: "Etiket yazdır", href: "#", soon: true },
+      { label: "Etiket yazdır", href: "/admin/labels" },
     ],
   },
   {
