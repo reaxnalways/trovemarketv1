@@ -16,7 +16,7 @@ export default async function AdminHomePage({ searchParams }: AdminHomePageProps
   const modules = [
     ["İlanlar", "Yayın, stok, satıldı ve öne çıkan durumlarını yönet.", "/admin/listings", "Yönet"],
     ["Yeni ilan", "Görsel → Sahibinden linki → kontrol → yayın akışını başlat.", "/admin/listings/new", "İlan oluştur"],
-    ["Barkod tara", "Kamera veya fiziksel okuyucu ile ürüne hızlı erişim için hazırlanıyor.", "#", "Yakında"],
+    ["Barkod tara", "Telefon, tablet, bilgisayar kamerası veya fiziksel okuyucu ile ürünü aç.", "/admin/scan", "Taramayı aç"],
     ["Kategoriler", "Kategori sırası, görünürlük ve ürün kodu gruplarını yönet.", "#", "Yakında"],
     ["Teknik servis", "Servis türleri ve WhatsApp yönlendirme içeriklerini yönet.", "#", "Yakında"],
     ["Banner & kampanya", "Ana sayfa kampanya alanlarını yönetmek için ayrılmış modül.", "#", "Yakında"],
@@ -34,16 +34,16 @@ export default async function AdminHomePage({ searchParams }: AdminHomePageProps
     {error ? <p className="adminError">{error}</p> : null}
 
     <section className="adminDashboardCard adminHeroCard">
-      <div><p className="eyebrow">MAĞAZA KONTROL MERKEZİ</p><h1>Günlük işlemler tek ekranda.</h1><p>İlan oluşturma, yayın yönetimi, stok ve marka ayarları teknik bilgi gerektirmeden erişilebilir durumda. Barkod, etiket, servis ve kampanya modülleri aynı yapıya bağımsız olarak eklenecek.</p></div>
-      <div className="adminDashboardActions adminDashboardActionRow"><Link className="adminButton adminActionLink" href="/admin/listings/new">+ Yeni ilan oluştur</Link><Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/listings">İlanları yönet</Link></div>
+      <div><p className="eyebrow">MAĞAZA KONTROL MERKEZİ</p><h1>Günlük işlemler tek ekranda.</h1><p>İlan oluşturma, düzenleme, yayın, stok, barkodla ürün bulma ve marka ayarları teknik bilgi gerektirmeden yönetilebilir. Diğer MVP modülleri bu yapıya bağımsız olarak ekleniyor.</p></div>
+      <div className="adminDashboardActions adminDashboardActionRow"><Link className="adminButton adminActionLink" href="/admin/listings/new">+ Yeni ilan oluştur</Link><Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/scan">Barkod tara</Link><Link className="adminButton adminButtonSecondary adminActionLink" href="/admin/listings">İlanları yönet</Link></div>
     </section>
 
     <section className="adminStatsGrid">
       <div><span>Toplam ürün</span><strong>{products?.length ?? 0}</strong></div><div><span>Yayında</span><strong>{publishedCount}</strong></div><div><span>Taslak</span><strong>{drafts.length}</strong></div><div><span>Satıldı</span><strong>{soldCount}</strong></div><div><span>Öne çıkan</span><strong>{featuredCount}</strong></div>
     </section>
 
-    <section className="listingSection"><div className="sectionHeading"><div><p className="eyebrow">YÖNETİM MODÜLLERİ</p><h2>Hızlı işlemler</h2></div><p>MVP için aktif olan ekranlar kullanılabilir; sonraki modüller yerleri belli olacak şekilde ayrıldı.</p></div><div className="adminModuleGrid">{modules.map(([title, description, href, action]) => <article className="adminModuleCard" key={title}><div><h3>{title}</h3><p>{description}</p></div>{href === "#" ? <span className="adminModuleSoon">{action}</span> : <Link className="adminTextLink" href={href}>{action} →</Link>}</article>)}</div></section>
+    <section className="listingSection"><div className="sectionHeading"><div><p className="eyebrow">YÖNETİM MODÜLLERİ</p><h2>Hızlı işlemler</h2></div><p>MVP için aktif ekranlar kullanılabilir; sonraki modüller mevcut yapıyı bozmadan eklenebilir.</p></div><div className="adminModuleGrid">{modules.map(([title, description, href, action]) => <article className="adminModuleCard" key={title}><div><h3>{title}</h3><p>{description}</p></div>{href === "#" ? <span className="adminModuleSoon">{action}</span> : <Link className="adminTextLink" href={href}>{action} →</Link>}</article>)}</div></section>
 
-    <section className="listingSection"><div className="sectionHeading"><div><p className="eyebrow">YAYIN BEKLEYENLER</p><h2>Taslak ilanlar</h2></div><Link className="adminTextLink" href="/admin/listings">Tüm ilanlar →</Link></div>{drafts.length ? <div className="adminDraftList">{drafts.map((draft) => <article className="adminDraftItem" key={draft.id}><div><span className="productCode">{draft.product_code}</span><h3>{draft.title}</h3><p>{draft.price == null ? "Fiyat belirtilmedi" : `${Number(draft.price).toLocaleString("tr-TR")} ₺`}</p></div><form action={publishListing}><input name="productId" type="hidden" value={draft.id}/><button className="adminButton" type="submit">Yayınla</button></form></article>)}</div> : <p className="emptyState">Yayın bekleyen taslak ilan yok.</p>}</section>
+    <section className="listingSection"><div className="sectionHeading"><div><p className="eyebrow">YAYIN BEKLEYENLER</p><h2>Taslak ilanlar</h2></div><Link className="adminTextLink" href="/admin/listings">Tüm ilanlar →</Link></div>{drafts.length ? <div className="adminDraftList">{drafts.map((draft) => <article className="adminDraftItem" key={draft.id}><div><span className="productCode">{draft.product_code}</span><h3>{draft.title}</h3><p>{draft.price == null ? "Fiyat belirtilmedi" : `${Number(draft.price).toLocaleString("tr-TR")} ₺`}</p></div><div className="adminInlineActions"><Link className="adminButton adminButtonSecondary" href={`/admin/listings/${draft.id}`}>Düzenle</Link><form action={publishListing}><input name="productId" type="hidden" value={draft.id}/><button className="adminButton" type="submit">Yayınla</button></form></div></article>)}</div> : <p className="emptyState">Yayın bekleyen taslak ilan yok.</p>}</section>
   </main>;
 }
