@@ -40,3 +40,19 @@ h1 { margin: 0; font-size: clamp(2.5rem, 9vw, 5.5rem); line-height: .96; letter-
 @media (min-width: 1040px) {
   .listingGrid { grid-template-columns: repeat(4, 1fr); }
 }
+
+.adminShell { width: min(100% - 32px, 960px); margin: 0 auto; padding: 48px 0; }
+.adminLoginShell { display: grid; min-height: 100vh; place-items: center; padding: 24px 16px; }
+.adminPanel { width: min(100%, 460px); padding: 28px; border: 1px solid #252a36; border-radius: 24px; background: rgba(17, 20, 28, .92); box-shadow: 0 24px 80px rgba(0, 0, 0, .28); }
+.adminPanel h1 { margin-top: 8px; font-size: clamp(2rem, 10vw, 3.4rem); }
+.adminForm { display: grid; gap: 16px; margin-top: 28px; }
+.adminField { display: grid; gap: 8px; color: #cbd1de; font-size: .9rem; font-weight: 700; }
+.adminField input { width: 100%; padding: 14px 15px; border: 1px solid #303747; border-radius: 14px; outline: none; background: #0d1119; color: #f6f7fb; font: inherit; }
+.adminField input:focus { border-color: #697cff; box-shadow: 0 0 0 3px rgba(105, 124, 255, .14); }
+.adminButton { min-height: 48px; padding: 0 18px; border: 0; border-radius: 14px; background: #f6f7fb; color: #080a0f; font: inherit; font-weight: 800; cursor: pointer; }
+.adminButtonSecondary { border: 1px solid #303747; background: transparent; color: #f6f7fb; }
+.adminError { margin: 18px 0 0; padding: 13px 14px; border: 1px solid #65323b; border-radius: 14px; background: rgba(105, 35, 48, .18); color: #ffb5c0; line-height: 1.5; }
+.adminTopbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 40px; }
+.adminDashboardCard { padding: 28px; border: 1px solid #252a36; border-radius: 24px; background: rgba(17, 20, 28, .78); }
+.adminDashboardCard h1 { font-size: clamp(2rem, 8vw, 4rem); }
+.adminDashboardCard p { max-width: 620px; color: #aeb5c5; line-height: 1.7; }
