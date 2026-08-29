@@ -1,5 +1,5 @@
 import { createPublicSupabaseClient } from "../../lib/supabase/public-client";
-import { resolvePublicListings } from "./public-listings";
+import { resolvePublicListings, type ListingQueryResult, type PublicListing } from "./public-listings";
 
 const PUBLIC_LISTING_FIELDS = [
   "id", "product_code", "title", "brand", "model", "price", "images", "stock_status", "is_featured", "created_at",
@@ -9,11 +9,15 @@ const PUBLIC_LISTING_DETAIL_FIELDS = [
   "id", "product_code", "title", "brand", "model", "price", "condition", "storage", "color", "battery_health", "description", "images", "stock_status", "created_at",
 ].join(",");
 
+function asListingQueryResult(data: unknown, error: { message: string } | null): ListingQueryResult {
+  return { data: data as PublicListing[] | null, error };
+}
+
 export async function listFeaturedListings(limit = 6) {
   const supabase = createPublicSupabaseClient();
   return resolvePublicListings(async () => {
     const { data, error } = await supabase.from("products").select(PUBLIC_LISTING_FIELDS).eq("publication_status", "published").eq("is_featured", true).order("created_at", { ascending: false }).limit(limit);
-    return { data, error };
+    return asListingQueryResult(data, error);
   });
 }
 
@@ -21,7 +25,7 @@ export async function listRecentListings(limit = 8) {
   const supabase = createPublicSupabaseClient();
   return resolvePublicListings(async () => {
     const { data, error } = await supabase.from("products").select(PUBLIC_LISTING_FIELDS).eq("publication_status", "published").order("created_at", { ascending: false }).limit(limit);
-    return { data, error };
+    return asListingQueryResult(data, error);
   });
 }
 
@@ -35,7 +39,7 @@ export async function listListingsByCategory(categoryId: string, limit = 24) {
       .eq("publication_status", "published")
       .order("created_at", { ascending: false })
       .limit(limit);
-    return { data, error };
+    return asListingQueryResult(data, error);
   });
 }
 
