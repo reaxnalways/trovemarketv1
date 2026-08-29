@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 
-type Props = { searchParams: Promise<{ code?: string; error?: string }> };
+type Props = { searchParams: Promise<{ code?: string }> };
 
 export default async function AdminLabelsPage({ searchParams }: Props) {
   const { code } = await searchParams;
@@ -9,14 +9,21 @@ export default async function AdminLabelsPage({ searchParams }: Props) {
 
   if (normalized) {
     const supabase = await createSupabaseServerClient();
-    const { data } = await supabase
+    const { data: byProductCode } = await supabase
       .from("products")
       .select("id")
-      .or(`product_code.eq.${normalized},barcode.eq.${normalized}`)
-      .limit(1)
+      .eq("product_code", normalized)
       .maybeSingle();
 
-    if (data?.id) redirect(`/admin/listings/${data.id}/label`);
+    if (byProductCode?.id) redirect(`/admin/listings/${byProductCode.id}/label`);
+
+    const { data: byBarcode } = await supabase
+      .from("products")
+      .select("id")
+      .eq("barcode", normalized)
+      .maybeSingle();
+
+    if (byBarcode?.id) redirect(`/admin/listings/${byBarcode.id}/label`);
   }
 
   return (
