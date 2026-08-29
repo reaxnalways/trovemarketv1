@@ -18,7 +18,13 @@ export function SiteHeader({ settings }: SiteHeaderProps) {
       <div className="siteHeaderInner">
         <Link className="siteBrand" href="/" aria-label={`${settings.site_name} ana sayfa`}>
           {settings.logo_url ? (
-            <img className="siteBrandLogo" src={settings.logo_url} alt={`${settings.site_name} logo`} />
+            <img
+              src={settings.logo_url}
+              alt={`${settings.site_name} logo`}
+              width={36}
+              height={36}
+              style={{ width: 36, height: 36, maxWidth: 36, flex: "0 0 36px", objectFit: "contain", display: "block" }}
+            />
           ) : (
             <span className="siteBrandMark">T</span>
           )}
