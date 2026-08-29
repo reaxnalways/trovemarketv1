@@ -55,10 +55,13 @@ h1 { margin: 0; font-size: clamp(2.5rem, 9vw, 5.5rem); line-height: .96; letter-
 .adminField input:focus,
 .adminField select:focus,
 .adminField textarea:focus { border-color: #697cff; box-shadow: 0 0 0 3px rgba(105, 124, 255, .14); }
+.adminField small { color: #838da2; font-weight: 500; line-height: 1.5; }
 .adminButton { display: inline-grid; min-height: 48px; padding: 0 18px; place-items: center; border: 0; border-radius: 14px; background: #f6f7fb; color: #080a0f; font: inherit; font-weight: 800; cursor: pointer; text-decoration: none; }
+.adminButton:disabled { cursor: wait; opacity: .65; }
 .adminButtonSecondary { border: 1px solid #303747; background: transparent; color: #f6f7fb; }
 .adminError { margin: 18px 0 0; padding: 13px 14px; border: 1px solid #65323b; border-radius: 14px; background: rgba(105, 35, 48, .18); color: #ffb5c0; line-height: 1.5; }
 .adminSuccess { margin: 0 0 22px; padding: 13px 14px; border: 1px solid #315a48; border-radius: 14px; background: rgba(41, 107, 73, .18); color: #aef0ca; line-height: 1.5; }
+.adminStatus { margin: 0; padding: 13px 14px; border: 1px solid #33446d; border-radius: 14px; background: rgba(48, 72, 128, .15); color: #c7d3ff; line-height: 1.5; }
 .adminTopbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 40px; }
 .adminDashboardCard { padding: 28px; border: 1px solid #252a36; border-radius: 24px; background: rgba(17, 20, 28, .78); }
 .adminDashboardCard h1 { font-size: clamp(2rem, 8vw, 4rem); }
@@ -70,7 +73,15 @@ h1 { margin: 0; font-size: clamp(2.5rem, 9vw, 5.5rem); line-height: .96; letter-
 .adminListingForm { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 26px; }
 .adminFormActions { display: flex; justify-content: flex-start; margin-top: 4px; }
 .adminActionLink { width: fit-content; }
+.adminImportForm { display: grid; gap: 18px; margin-top: 28px; }
+.adminFlowSteps { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.adminFlowSteps span { padding: 10px 12px; border: 1px solid #2b3140; border-radius: 12px; background: #0d1119; color: #aeb5c5; font-size: .82rem; font-weight: 800; }
+.adminUploadBox { padding: 18px; border: 1px dashed #3a4356; border-radius: 18px; background: rgba(13, 17, 25, .65); }
+.adminUploadBox input[type="file"] { padding: 11px; border-style: dashed; }
+.adminImportButton { width: 100%; margin-top: 4px; }
 @media (min-width: 720px) {
   .adminListingForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .adminFieldWide { grid-column: 1 / -1; }
+  .adminFlowSteps { grid-template-columns: repeat(3, 1fr); }
+  .adminImportButton { width: fit-content; }
 }
