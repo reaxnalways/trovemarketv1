@@ -13,23 +13,32 @@ type SiteHeaderProps = {
 };
 
 export function SiteHeader({ settings }: SiteHeaderProps) {
+  const siteName = settings.site_name || "Trove Teknoloji";
+
   return (
     <header className="siteHeader">
       <div className="siteHeaderInner">
-        <Link className="siteBrand" href="/" aria-label={`${settings.site_name} ana sayfa`}>
+        <Link className="siteBrand" href="/" aria-label={siteName + " ana sayfa"}>
           {settings.logo_url ? (
             <img
               src={settings.logo_url}
-              alt={`${settings.site_name} logo`}
+              alt={siteName + " logo"}
               width={36}
               height={36}
-              style={{ width: 36, height: 36, maxWidth: 36, flex: "0 0 36px", objectFit: "contain", display: "block" }}
+              style={{
+                width: 36,
+                height: 36,
+                maxWidth: 36,
+                flex: "0 0 36px",
+                objectFit: "contain",
+                display: "block",
+              }}
             />
           ) : (
             <span className="siteBrandMark">T</span>
           )}
           <span className="siteBrandText">
-            <strong>{settings.site_name}</strong>
+            <strong>{siteName}</strong>
             <small>Teknoloji</small>
           </span>
         </Link>
