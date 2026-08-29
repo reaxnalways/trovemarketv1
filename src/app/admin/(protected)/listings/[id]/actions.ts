@@ -29,15 +29,9 @@ export async function updateListing(formData: FormData) {
   const batteryHealth = rawBattery === null ? null : Number(rawBattery);
   const deviceRegion = optional(formData.get("deviceRegion"));
 
-  if (price !== null && (!Number.isFinite(price) || price < 0)) {
-    redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz fiyat.")}`);
-  }
-  if (batteryHealth !== null && (!Number.isInteger(batteryHealth) || batteryHealth < 0 || batteryHealth > 100)) {
-    redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Pil sağlığı 0-100 arasında olmalıdır.")}`);
-  }
-  if (deviceRegion !== null && deviceRegion !== "tr" && deviceRegion !== "international") {
-    redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz cihaz bölgesi.")}`);
-  }
+  if (price !== null && (!Number.isFinite(price) || price < 0)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz fiyat.")}`);
+  if (batteryHealth !== null && (!Number.isInteger(batteryHealth) || batteryHealth < 0 || batteryHealth > 100)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Pil sağlığı 0-100 arasında olmalıdır.")}`);
+  if (deviceRegion !== null && !["tr", "passport", "international"].includes(deviceRegion)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz cihaz kayıt türü.")}`);
 
   const updates = {
     title,
