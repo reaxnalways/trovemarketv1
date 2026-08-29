@@ -3,6 +3,7 @@ import { SiteHeader } from "../components/site-header";
 import { listPublicCategories } from "../modules/categories/repository";
 import { listFeaturedListings, listRecentListings } from "../modules/listings/repository";
 import { formatListingPrice } from "../modules/listings/public-listings";
+import { getPublicSiteSettings } from "../modules/settings/public-settings";
 
 const categoryDescriptions: Record<string, string> = {
   telefon: "İkinci el ve sıfır telefonları karşılaştır.",
@@ -12,23 +13,22 @@ const categoryDescriptions: Record<string, string> = {
 };
 
 export default async function HomePage() {
-  const [categories, featuredListings, recentListings] = await Promise.all([
+  const [categories, featuredListings, recentListings, settings] = await Promise.all([
     listPublicCategories(),
     listFeaturedListings(),
     listRecentListings(),
+    getPublicSiteSettings(),
   ]);
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader settings={settings} />
       <main className="shell homeShell">
         <section className="hero homeHero">
           <div className="heroCopy">
-            <p className="eyebrow">TROVE TEKNOLOJİ</p>
+            <p className="eyebrow">{settings.site_name.toUpperCase()}</p>
             <h1>Teknolojiyi bulmak da, destek almak da kolay.</h1>
-            <p className="heroText">
-              Güncel ürün ilanlarını keşfet, cihaz detaylarını incele ve ihtiyacın olduğunda Trove Teknoloji ile hızlıca iletişime geç.
-            </p>
+            <p className="heroText">{settings.site_tagline}</p>
             <div className="heroActions">
               <Link className="primaryCta" href="/kategori/telefon">Telefonları incele</Link>
               <Link className="secondaryCta" href="/kategori/teknik-servis">Teknik servis</Link>
