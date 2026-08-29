@@ -10,6 +10,7 @@ export type DraftListingInput = {
   batteryHealth?: string;
   description?: string;
   sourceUrl?: string;
+  images?: string[];
 };
 
 export type DraftListingRecord = {
@@ -24,6 +25,7 @@ export type DraftListingRecord = {
   battery_health: string | null;
   description: string | null;
   source_url: string | null;
+  images: string[];
   stock_status: "in_stock";
   publication_status: "draft";
 };
@@ -45,6 +47,10 @@ function parsePrice(value: string | undefined): number | null {
   }
 
   return price;
+}
+
+function normalizeImages(images: string[] | undefined): string[] {
+  return (images ?? []).map((image) => image.trim()).filter(Boolean);
 }
 
 export function buildDraftListing(input: DraftListingInput): DraftListingRecord {
@@ -76,6 +82,7 @@ export function buildDraftListing(input: DraftListingInput): DraftListingRecord 
     battery_health: optionalText(input.batteryHealth),
     description: optionalText(input.description),
     source_url: optionalText(input.sourceUrl),
+    images: normalizeImages(input.images),
     stock_status: "in_stock",
     publication_status: "draft",
   };
