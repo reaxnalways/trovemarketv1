@@ -46,7 +46,7 @@ export default async function NewListingPage({ searchParams }: NewListingPagePro
           </>
         ) : (
           <>
-            <p className="adminLead">Görselleri ekle, Sahibinden linkini gir ve ilan sayfasındaki detayları tek parça kopyalayıp yapıştır. Trove bilgileri otomatik ayırıp taslak ilanı oluşturur.</p>
+            <p className="adminLead">Görselleri ekle ve Sahibinden ilan linkini gir. Trove bilgileri linkten otomatik almaya çalışır, taslak oluşturur ve yayınlamadan önce sana kontrol ettirir. Sahibinden erişimi engellerse alttaki yedek metin alanını kullanabilirsin.</p>
             <ListingImportForm
               initialError={error}
               supabasePublishableKey={publishableKey}
