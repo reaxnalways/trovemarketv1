@@ -82,8 +82,16 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
       {error ? <p className="adminError">{error}</p> : null}
       {status ? <p className="adminStatus">{status}</p> : null}
 
-      <div className="adminLogoPreview">
-        {logoUrl ? <img src={logoUrl} alt="Mevcut site logosu" /> : <span>Henüz logo yok</span>}
+      <div className="adminLogoPreview" style={{ minHeight: 96, display: "flex", alignItems: "center" }}>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Mevcut site logosu"
+            width={180}
+            height={72}
+            style={{ width: "auto", height: "auto", maxWidth: 180, maxHeight: 72, objectFit: "contain", display: "block" }}
+          />
+        ) : <span>Henüz logo yok</span>}
       </div>
 
       <label className="adminField adminUploadBox">
