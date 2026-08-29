@@ -1,7 +1,7 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createImportedDraftListing } from "./actions";
 
 type ListingImportFormProps = {
@@ -20,6 +20,13 @@ function fileExtension(file: File): string {
   return file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : file.type === "image/avif" ? "avif" : "jpg";
 }
 
+function moveItem<T>(items: T[], from: number, to: number) {
+  const copy = [...items];
+  const [item] = copy.splice(from, 1);
+  copy.splice(to, 0, item);
+  return copy;
+}
+
 export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initialError }: ListingImportFormProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [sourceUrl, setSourceUrl] = useState("");
@@ -27,6 +34,34 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
   const [status, setStatus] = useState<string | null>(null);
   const [clientError, setClientError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const previews = useMemo(() => files.map((file) => ({ file, url: URL.createObjectURL(file) })), [files]);
+
+  useEffect(() => {
+    return () => previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+  }, [previews]);
+
+  function addFiles(selected: File[]) {
+    setClientError(null);
+    const next = [...files, ...selected];
+    if (next.length > MAX_IMAGES) {
+      setClientError(`En fazla ${MAX_IMAGES} görsel yükleyebilirsin.`);
+      return;
+    }
+    setFiles(next);
+  }
+
+  function removeFile(index: number) {
+    if (busy) return;
+    setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  function moveFile(index: number, direction: -1 | 1) {
+    if (busy) return;
+    const target = index + direction;
+    if (target < 0 || target >= files.length) return;
+    setFiles((current) => moveItem(current, index, target));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,10 +77,6 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
     }
     if (files.length === 0) {
       setClientError("En az bir ürün görseli seçmelisin.");
-      return;
-    }
-    if (files.length > MAX_IMAGES) {
-      setClientError(`En fazla ${MAX_IMAGES} görsel yükleyebilirsin.`);
       return;
     }
 
@@ -65,7 +96,7 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
     const imageUrls: string[] = [];
 
     try {
-      setStatus("Görseller yükleniyor...");
+      setStatus("Görseller seçtiğin sırayla yükleniyor...");
       for (const file of files) {
         const path = `drafts/${crypto.randomUUID()}.${fileExtension(file)}`;
         const { error } = await supabase.storage.from("product-images").upload(path, file, {
@@ -108,11 +139,32 @@ export function ListingImportForm({ supabaseUrl, supabasePublishableKey, initial
           accept="image/jpeg,image/png,image/webp,image/avif"
           disabled={busy}
           multiple
-          onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
+          onChange={(event) => {
+            addFiles(Array.from(event.target.files ?? []));
+            event.currentTarget.value = "";
+          }}
           type="file"
         />
-        <small>{files.length ? `${files.length} görsel seçildi` : `En fazla ${MAX_IMAGES} görsel, görsel başına 10 MB`}</small>
+        <small>{files.length ? `${files.length}/${MAX_IMAGES} görsel seçildi. İlk görsel kapak görselidir.` : `En fazla ${MAX_IMAGES} görsel, görsel başına 10 MB`}</small>
       </label>
+
+      {previews.length ? (
+        <div className="adminImagePreviewGrid" aria-label="Seçilen ürün görselleri">
+          {previews.map((preview, index) => (
+            <article className="adminImagePreviewCard" key={`${preview.file.name}-${preview.file.lastModified}-${index}`}>
+              <div className="adminImagePreviewMedia">
+                <img src={preview.url} alt={`${index + 1}. ürün görseli`} />
+                <span className="adminImageOrder">{index === 0 ? "KAPAK" : index + 1}</span>
+              </div>
+              <div className="adminImagePreviewActions">
+                <button disabled={busy || index === 0} onClick={() => moveFile(index, -1)} type="button" aria-label="Görseli sola taşı">←</button>
+                <button disabled={busy || index === files.length - 1} onClick={() => moveFile(index, 1)} type="button" aria-label="Görseli sağa taşı">→</button>
+                <button disabled={busy} onClick={() => removeFile(index)} type="button">Kaldır</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
 
       <label className="adminField">
         Sahibinden ilan linki
