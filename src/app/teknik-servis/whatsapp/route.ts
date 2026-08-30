@@ -8,13 +8,14 @@ function clean(value: string | null, max = 500) {
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const name = clean(searchParams.get("name"), 120);
-  const phone = clean(searchParams.get("phone"), 40);
   const deviceType = clean(searchParams.get("deviceType"), 80);
-  const brandModel = clean(searchParams.get("brandModel"), 160);
-  const complaint = clean(searchParams.get("complaint"), 800);
+  const brand = clean(searchParams.get("brand"), 100);
+  const model = clean(searchParams.get("model"), 160);
+  const complaint = clean(searchParams.get("complaint"), 300);
+  const complaintDetail = clean(searchParams.get("complaintDetail"), 800);
   const note = clean(searchParams.get("note"), 800);
 
-  if (!name || !phone || !deviceType || !brandModel || !complaint) {
+  if (!name || !deviceType || !brand || !model || !complaint) {
     return NextResponse.redirect(new URL("/kategori/teknik-servis?form=missing", request.url));
   }
 
@@ -29,10 +30,11 @@ export async function GET(request: NextRequest) {
     "Merhaba Trove Teknoloji, teknik servis kaydı oluşturmak istiyorum.",
     "",
     `Ad Soyad: ${name}`,
-    `Telefon: ${phone}`,
     `Cihaz Türü: ${deviceType}`,
-    `Marka / Model: ${brandModel}`,
-    `Şikayet / Arıza: ${complaint}`,
+    `Marka: ${brand}`,
+    `Model: ${model}`,
+    `Arıza / Şikayet: ${complaint}`,
+    complaintDetail ? `Arıza Detayı: ${complaintDetail}` : null,
     note ? `Ek Not: ${note}` : null,
   ]
     .filter((line): line is string => line !== null)
