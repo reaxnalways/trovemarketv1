@@ -4,6 +4,7 @@ export type PublicListing = {
   title: string;
   brand: string | null;
   model: string | null;
+  storage: string | null;
   price: number | null;
   images: string[];
   stock_status: "in_stock" | "reserved" | "sold" | "out_of_stock";
