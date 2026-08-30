@@ -13,10 +13,18 @@ type SettingsFormProps = {
     whatsappNumber: string;
     whatsappDefaultMessage: string;
     logoUrl: string | null;
+    brandWordmarkUrl: string | null;
   };
 };
 
-const MAX_LOGO_BYTES = 1024 * 1024;
+const MAX_BRAND_ASSET_BYTES = 1024 * 1024;
+
+function validateSvg(file: File, label: string) {
+  if (file.type !== "image/svg+xml" && !file.name.toLowerCase().endsWith(".svg")) {
+    throw new Error(`${label} yalnızca SVG formatında olmalıdır.`);
+  }
+  if (file.size > MAX_BRAND_ASSET_BYTES) throw new Error(`${label} en fazla 1 MB olabilir.`);
+}
 
 export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: SettingsFormProps) {
   const [siteName, setSiteName] = useState(initial.siteName);
@@ -24,10 +32,24 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
   const [whatsappNumber, setWhatsappNumber] = useState(initial.whatsappNumber);
   const [whatsappDefaultMessage, setWhatsappDefaultMessage] = useState(initial.whatsappDefaultMessage);
   const [logoUrl, setLogoUrl] = useState<string | null>(initial.logoUrl);
+  const [brandWordmarkUrl, setBrandWordmarkUrl] = useState<string | null>(initial.brandWordmarkUrl);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [brandWordmarkFile, setBrandWordmarkFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  async function uploadBrandAsset(file: File, prefix: string) {
+    const supabase = createBrowserClient(supabaseUrl, supabasePublishableKey);
+    const path = `${prefix}/${prefix}-${Date.now()}.svg`;
+    const { error: uploadError } = await supabase.storage.from("brand-assets").upload(path, file, {
+      contentType: "image/svg+xml",
+      cacheControl: "3600",
+      upsert: false,
+    });
+    if (uploadError) throw new Error(`SVG yüklenemedi: ${uploadError.message}`);
+    return supabase.storage.from("brand-assets").getPublicUrl(path).data.publicUrl;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,25 +59,18 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
 
     try {
       let nextLogoUrl = logoUrl;
+      let nextBrandWordmarkUrl = brandWordmarkUrl;
 
       if (logoFile) {
-        if (logoFile.type !== "image/svg+xml" && !logoFile.name.toLowerCase().endsWith(".svg")) {
-          throw new Error("Logo yalnızca SVG formatında olmalıdır.");
-        }
-        if (logoFile.size > MAX_LOGO_BYTES) throw new Error("SVG logo en fazla 1 MB olabilir.");
-
+        validateSvg(logoFile, "Logo");
         setStatus("Logo yükleniyor...");
-        const supabase = createBrowserClient(supabaseUrl, supabasePublishableKey);
-        const path = `logo/trove-logo-${Date.now()}.svg`;
-        const { error: uploadError } = await supabase.storage.from("brand-assets").upload(path, logoFile, {
-          contentType: "image/svg+xml",
-          cacheControl: "3600",
-          upsert: false,
-        });
-        if (uploadError) throw new Error(`Logo yüklenemedi: ${uploadError.message}`);
+        nextLogoUrl = await uploadBrandAsset(logoFile, "logo");
+      }
 
-        const { data } = supabase.storage.from("brand-assets").getPublicUrl(path);
-        nextLogoUrl = data.publicUrl;
+      if (brandWordmarkFile) {
+        validateSvg(brandWordmarkFile, "Marka yazısı");
+        setStatus("Marka yazısı yükleniyor...");
+        nextBrandWordmarkUrl = await uploadBrandAsset(brandWordmarkFile, "wordmark");
       }
 
       setStatus("Ayarlar kaydediliyor...");
@@ -65,10 +80,13 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
         whatsappNumber,
         whatsappDefaultMessage,
         logoUrl: nextLogoUrl,
+        brandWordmarkUrl: nextBrandWordmarkUrl,
       });
       setLogoUrl(nextLogoUrl);
+      setBrandWordmarkUrl(nextBrandWordmarkUrl);
       setLogoFile(null);
-      setStatus("Ayarlar kaydedildi. Logo müşteri sayfalarında güncellendi.");
+      setBrandWordmarkFile(null);
+      setStatus("Ayarlar kaydedildi. Header marka görselleri güncellendi.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Ayarlar kaydedilemedi.");
       setStatus(null);
@@ -82,27 +100,48 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
       {error ? <p className="adminError">{error}</p> : null}
       {status ? <p className="adminStatus">{status}</p> : null}
 
-      <div className="adminLogoPreview" style={{ minHeight: 96, display: "flex", alignItems: "center" }}>
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt="Mevcut site logosu"
-            width={180}
-            height={72}
-            style={{ width: "auto", height: "auto", maxWidth: 180, maxHeight: 72, objectFit: "contain", display: "block" }}
-          />
-        ) : <span>Henüz logo yok</span>}
-      </div>
-
       <label className="adminField adminUploadBox">
-        SVG logo
+        Header logo SVG
+        <div className="adminLogoPreview" style={{ minHeight: 88, display: "flex", alignItems: "center" }}>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="Mevcut header logosu"
+              width={80}
+              height={56}
+              style={{ width: "auto", height: "auto", maxWidth: 80, maxHeight: 56, objectFit: "contain", display: "block" }}
+            />
+          ) : <span>Henüz logo yok</span>}
+        </div>
         <input
           accept="image/svg+xml,.svg"
           disabled={busy}
           onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
           type="file"
         />
-        <small>Yalnızca SVG, en fazla 1 MB. Kaydettiğinde header ve müşteri sayfalarında kullanılır.</small>
+        <small>Kare veya amblem SVG. Header'ın solunda gösterilir. En fazla 1 MB.</small>
+      </label>
+
+      <label className="adminField adminUploadBox">
+        Marka yazısı SVG
+        <div className="adminLogoPreview" style={{ minHeight: 88, display: "flex", alignItems: "center" }}>
+          {brandWordmarkUrl ? (
+            <img
+              src={brandWordmarkUrl}
+              alt="Mevcut marka yazısı"
+              width={220}
+              height={56}
+              style={{ width: "auto", height: "auto", maxWidth: 220, maxHeight: 56, objectFit: "contain", display: "block" }}
+            />
+          ) : <span>Henüz marka yazısı SVG yok</span>}
+        </div>
+        <input
+          accept="image/svg+xml,.svg"
+          disabled={busy}
+          onChange={(event) => setBrandWordmarkFile(event.target.files?.[0] ?? null)}
+          type="file"
+        />
+        <small>Kendi font/tasarımınla hazırladığın yatay marka yazısını yükle. Header'da logonun yanında gösterilir.</small>
       </label>
 
       <label className="adminField">
