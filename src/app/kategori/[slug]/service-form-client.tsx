@@ -73,6 +73,7 @@ const COMMON_FAULTS = [
 export function ServiceFormClient() {
   const [deviceType, setDeviceType] = useState<keyof typeof DEVICE_OPTIONS | "">("");
   const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
   const [selectedFaults, setSelectedFaults] = useState<string[]>([]);
 
   const brands = useMemo(() => (deviceType ? Object.keys(DEVICE_OPTIONS[deviceType]) : []), [deviceType]);
@@ -87,13 +88,8 @@ export function ServiceFormClient() {
   }
 
   return (
-    <div className="serviceFormGrid">
-      <label className="serviceField">
-        <span>Ad Soyad *</span>
-        <input autoComplete="name" maxLength={120} name="name" required type="text" />
-      </label>
-
-      <label className="serviceField">
+    <div className="serviceFormGrid serviceProgressiveForm">
+      <label className="serviceField serviceFieldWide">
         <span>Cihaz Türü *</span>
         <select
           name="deviceType"
@@ -102,60 +98,90 @@ export function ServiceFormClient() {
           onChange={(event) => {
             setDeviceType(event.target.value as keyof typeof DEVICE_OPTIONS | "");
             setBrand("");
+            setModel("");
+            setSelectedFaults([]);
           }}
         >
-          <option disabled value="">Seç</option>
+          <option disabled value="">Cihaz türünü seç</option>
           {Object.keys(DEVICE_OPTIONS).map((option) => <option key={option} value={option}>{option}</option>)}
         </select>
       </label>
 
-      <label className="serviceField">
-        <span>Marka *</span>
-        <select disabled={!deviceType} name="brand" required value={brand} onChange={(event) => setBrand(event.target.value)}>
-          <option disabled value="">Seç</option>
-          {brands.map((option) => <option key={option} value={option}>{option}</option>)}
-        </select>
-      </label>
+      {deviceType ? (
+        <label className="serviceField serviceFieldWide serviceProgressiveStep">
+          <span>Marka *</span>
+          <select
+            name="brand"
+            required
+            value={brand}
+            onChange={(event) => {
+              setBrand(event.target.value);
+              setModel("");
+              setSelectedFaults([]);
+            }}
+          >
+            <option disabled value="">Marka seç</option>
+            {brands.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
+        </label>
+      ) : null}
 
-      <label className="serviceField">
-        <span>Model *</span>
-        <select disabled={!brand} defaultValue="" key={`${deviceType}-${brand}`} name="model" required>
-          <option disabled value="">Seç</option>
-          {models.map((option) => <option key={option} value={option}>{option}</option>)}
-        </select>
-      </label>
+      {brand ? (
+        <label className="serviceField serviceFieldWide serviceProgressiveStep">
+          <span>Model *</span>
+          <select
+            name="model"
+            required
+            value={model}
+            onChange={(event) => {
+              setModel(event.target.value);
+              setSelectedFaults([]);
+            }}
+          >
+            <option disabled value="">Model seç</option>
+            {models.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
+        </label>
+      ) : null}
 
-      <fieldset className="serviceField serviceFieldWide serviceFaultFieldset">
-        <legend>Arıza / Şikayet *</legend>
-        <div className="serviceFaultChecklist">
-          {COMMON_FAULTS.map((fault) => {
-            const checked = selectedFaults.includes(fault);
-            return (
-              <label className={`serviceFaultOption${checked ? " isSelected" : ""}`} key={fault}>
-                <input
-                  checked={checked}
-                  name="complaint"
-                  onChange={() => toggleFault(fault)}
-                  type="checkbox"
-                  value={fault}
-                />
-                <span>{fault}</span>
+      {model ? (
+        <>
+          <label className="serviceField serviceFieldWide serviceProgressiveStep">
+            <span>Ad Soyad *</span>
+            <input autoComplete="name" maxLength={120} name="name" required type="text" />
+          </label>
+
+          <fieldset className="serviceField serviceFieldWide serviceFaultFieldset serviceProgressiveStep">
+            <legend>Arıza / Şikayet *</legend>
+            <div className="serviceFaultChecklist">
+              {COMMON_FAULTS.map((fault) => {
+                const checked = selectedFaults.includes(fault);
+                return (
+                  <label className={`serviceFaultOption${checked ? " isSelected" : ""}`} key={fault}>
+                    <input checked={checked} name="complaint" onChange={() => toggleFault(fault)} type="checkbox" value={fault} />
+                    <span>{fault}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <input name="complaintRequired" required type="text" value={selectedFaults.length ? "selected" : ""} readOnly tabIndex={-1} aria-hidden="true" className="serviceChecklistRequired" />
+          </fieldset>
+
+          {selectedFaults.length ? (
+            <>
+              <label className="serviceField serviceFieldWide serviceProgressiveStep">
+                <span>Arıza Detayı</span>
+                <textarea maxLength={800} name="complaintDetail" rows={3} />
               </label>
-            );
-          })}
-        </div>
-        <input name="complaintRequired" required type="text" value={selectedFaults.length ? "selected" : ""} readOnly tabIndex={-1} aria-hidden="true" className="serviceChecklistRequired" />
-      </fieldset>
 
-      <label className="serviceField serviceFieldWide">
-        <span>Arıza Detayı</span>
-        <textarea maxLength={800} name="complaintDetail" rows={4} />
-      </label>
-
-      <label className="serviceField serviceFieldWide">
-        <span>Ek Not</span>
-        <textarea maxLength={800} name="note" rows={3} />
-      </label>
+              <label className="serviceField serviceFieldWide serviceProgressiveStep">
+                <span>Ek Not</span>
+                <textarea maxLength={800} name="note" rows={2} />
+              </label>
+            </>
+          ) : null}
+        </>
+      ) : null}
     </div>
   );
 }
