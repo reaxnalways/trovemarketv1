@@ -21,29 +21,50 @@ export function SiteHeader({ settings = FALLBACK_SITE_SETTINGS }: SiteHeaderProp
   return (
     <header className="siteHeader">
       <div className="siteHeaderInner">
-        <Link className="siteBrand" href="/" aria-label={siteName + " ana sayfa"}>
+        <Link
+          className="siteBrand"
+          href="/"
+          aria-label={siteName + " ana sayfa"}
+          style={{ display: "inline-flex", alignItems: "center", gap: 10, minWidth: 0 }}
+        >
           {settings.logo_url ? (
             <img
               src={settings.logo_url}
               alt={siteName + " logo"}
-              width={180}
+              width={40}
               height={40}
               style={{
-                width: "auto",
+                width: "40px",
                 height: "40px",
-                maxWidth: "180px",
                 objectFit: "contain",
                 display: "block",
-                flexShrink: 0,
+                flex: "0 0 40px",
               }}
             />
           ) : (
-            <>
-              <span className="siteBrandMark">T</span>
-              <span className="siteBrandText">
-                <strong>{siteName}</strong>
-              </span>
-            </>
+            <span className="siteBrandMark">T</span>
+          )}
+
+          {settings.brand_wordmark_url ? (
+            <img
+              src={settings.brand_wordmark_url}
+              alt={siteName}
+              width={180}
+              height={32}
+              style={{
+                width: "auto",
+                height: "32px",
+                maxWidth: "180px",
+                objectFit: "contain",
+                objectPosition: "left center",
+                display: "block",
+                flexShrink: 1,
+              }}
+            />
+          ) : (
+            <span className="siteBrandText">
+              <strong>{siteName}</strong>
+            </span>
           )}
         </Link>
 
