@@ -9,6 +9,7 @@ test("normalizes site settings and WhatsApp number", () => {
     whatsappNumber: "+90 (555) 123 45 67",
     whatsappDefaultMessage: " Merhaba ",
     logoUrl: "https://example.supabase.co/storage/v1/object/public/brand-assets/logo/trove.svg",
+    brandWordmarkUrl: null,
   });
 
   assert.equal(result.siteName, "Trove Teknoloji");
@@ -23,5 +24,6 @@ test("rejects logos outside the brand assets bucket", () => {
     whatsappNumber: "",
     whatsappDefaultMessage: "",
     logoUrl: "https://example.com/logo.svg",
+    brandWordmarkUrl: null,
   }), /marka deposundan/);
 });
