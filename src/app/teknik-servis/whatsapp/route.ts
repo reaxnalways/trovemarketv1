@@ -11,11 +11,15 @@ export async function GET(request: NextRequest) {
   const deviceType = clean(searchParams.get("deviceType"), 80);
   const brand = clean(searchParams.get("brand"), 100);
   const model = clean(searchParams.get("model"), 160);
-  const complaint = clean(searchParams.get("complaint"), 300);
+  const complaints = searchParams
+    .getAll("complaint")
+    .map((value) => clean(value, 180))
+    .filter(Boolean)
+    .slice(0, 12);
   const complaintDetail = clean(searchParams.get("complaintDetail"), 800);
   const note = clean(searchParams.get("note"), 800);
 
-  if (!name || !deviceType || !brand || !model || !complaint) {
+  if (!name || !deviceType || !brand || !model || complaints.length === 0) {
     return NextResponse.redirect(new URL("/kategori/teknik-servis?form=missing", request.url));
   }
 
@@ -33,7 +37,8 @@ export async function GET(request: NextRequest) {
     `Cihaz Türü: ${deviceType}`,
     `Marka: ${brand}`,
     `Model: ${model}`,
-    `Arıza / Şikayet: ${complaint}`,
+    "Arıza / Şikayet:",
+    ...complaints.map((complaint) => `• ${complaint}`),
     complaintDetail ? `Arıza Detayı: ${complaintDetail}` : null,
     note ? `Ek Not: ${note}` : null,
   ]
