@@ -22,52 +22,28 @@ export default async function CategoryPage({ params, searchParams }: { params: P
       <>
         <SiteHeader settings={settings} />
         <main className="shell categoryPageShell serviceCustomerPage">
-          <Link className="backLink" href="/">← Ana sayfaya dön</Link>
+          <Link className="backLink" href="/">← Ana sayfa</Link>
 
           <section className="categoryHero serviceCustomerHero">
-            <p className="eyebrow">{settings.site_name.toUpperCase()} TEKNİK SERVİS</p>
-            <h1>Servis talebini oluştur.</h1>
-            <p className="heroText">
-              Cihazını seç, marka ve modele göre ilerle, arızayı belirt. Form tamamlandığında bilgiler hazır mesaj olarak Trove Teknoloji WhatsApp hattına aktarılır.
-            </p>
+            <h1>Teknik Servis Formu</h1>
           </section>
 
-          <section className="serviceFormLayout">
+          <section className="serviceFormLayout serviceFormLayoutSingle">
             <form action="/teknik-servis/whatsapp" className="serviceCustomerForm" method="get">
-              <div className="serviceFormHeading">
-                <p className="eyebrow">SERVİS FORMU</p>
-                <h2>Cihaz ve arıza bilgileri</h2>
-                <p>Zorunlu alanları doldur; son adımda WhatsApp açılacak.</p>
-              </div>
-
               {hasMissingFields ? (
                 <div className="adminError" role="alert">Lütfen zorunlu alanların tamamını doldur.</div>
               ) : null}
 
               {hasMissingWhatsapp ? (
-                <div className="adminError" role="alert">WhatsApp numarası henüz tanımlı değil. Lütfen Trove Teknoloji ile iletişime geç.</div>
+                <div className="adminError" role="alert">WhatsApp numarası tanımlı değil.</div>
               ) : null}
 
               <ServiceFormClient />
 
               <div className="serviceFormActions">
-                <button className="primaryCta serviceSubmitButton" type="submit">WhatsApp ile servis talebi oluştur</button>
-                <small>Gönder butonuna bastığınızda cihaz bilgileriniz WhatsApp mesajına eklenir; mesajı siz gönderirsiniz.</small>
+                <button className="primaryCta serviceSubmitButton" type="submit">WhatsApp&apos;a Gönder</button>
               </div>
             </form>
-
-            <aside className="serviceFormAside">
-              <div>
-                <p className="eyebrow">NASIL ÇALIŞIR?</p>
-                <h2>3 adımda hızlı servis.</h2>
-              </div>
-              <ol className="serviceSteps">
-                <li><strong>1</strong><span><b>Cihazını seç</b>Tür, marka ve model seçimini yap.</span></li>
-                <li><strong>2</strong><span><b>Arızayı belirt</b>Hazır seçeneklerden sorunu seç ve gerekirse detay ekle.</span></li>
-                <li><strong>3</strong><span><b>WhatsApp&apos;a geç</b>Hazır mesajı gönder ve servis ekibi seninle iletişime geçsin.</span></li>
-              </ol>
-              <p className="servicePrivacyNote">Form bilgileri bu adımda sitede servis kaydı olarak tutulmaz; yalnızca WhatsApp mesajını hazırlamak için kullanılır.</p>
-            </aside>
           </section>
         </main>
       </>
