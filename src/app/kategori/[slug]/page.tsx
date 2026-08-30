@@ -5,6 +5,7 @@ import { getPublicCategoryBySlug } from "../../../modules/categories/repository"
 import { formatListingPrice } from "../../../modules/listings/public-listings";
 import { listListingsByCategory } from "../../../modules/listings/repository";
 import { getPublicSiteSettings } from "../../../modules/settings/public-settings";
+import "./service-form.css";
 
 export default async function CategoryPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams?: Promise<{ form?: string }> }) {
   const { slug } = await params;
