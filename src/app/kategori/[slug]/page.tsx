@@ -41,7 +41,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
               <ServiceFormClient />
 
               <div className="serviceFormActions">
-                <button className="primaryCta serviceSubmitButton" type="submit">WhatsApp&apos;a Gönder</button>
+                <button className="primaryCta serviceSubmitButton" type="submit">Fiyat Teklifi Al</button>
               </div>
             </form>
           </section>
