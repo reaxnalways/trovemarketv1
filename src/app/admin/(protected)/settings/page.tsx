@@ -8,7 +8,7 @@ export default async function AdminSettingsPage() {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("site_settings")
-    .select("site_name,site_tagline,whatsapp_number,whatsapp_default_message,logo_url")
+    .select("site_name,site_tagline,whatsapp_number,whatsapp_default_message,logo_url,brand_wordmark_url")
     .eq("id", true)
     .maybeSingle();
 
@@ -25,7 +25,7 @@ export default async function AdminSettingsPage() {
       </header>
 
       <section className="adminDashboardCard">
-        <p className="adminLead">Marka bilgilerini, WhatsApp iletişimini ve müşteri tarafında kullanılacak SVG logoyu buradan yönet.</p>
+        <p className="adminLead">Marka bilgilerini, WhatsApp iletişimini, header logosunu ve marka yazısı SVG'sini buradan yönet.</p>
         <SettingsForm
           supabasePublishableKey={publishableKey}
           supabaseUrl={url}
@@ -35,6 +35,7 @@ export default async function AdminSettingsPage() {
             whatsappNumber: data?.whatsapp_number ?? "",
             whatsappDefaultMessage: data?.whatsapp_default_message ?? FALLBACK_SITE_SETTINGS.whatsapp_default_message,
             logoUrl: data?.logo_url ?? null,
+            brandWordmarkUrl: data?.brand_wordmark_url ?? null,
           }}
         />
       </section>
