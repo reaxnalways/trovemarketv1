@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isAdminEmail } from "@/modules/auth/admin-access";
 import { AdminSidebar } from "./admin-sidebar";
 import "../admin.css";
+import "../admin-refine.css";
 import "../image-manager.css";
 import "../label.css";
 
