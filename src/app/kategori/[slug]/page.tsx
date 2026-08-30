@@ -5,6 +5,7 @@ import { getPublicCategoryBySlug } from "../../../modules/categories/repository"
 import { formatListingPrice } from "../../../modules/listings/public-listings";
 import { listListingsByCategory } from "../../../modules/listings/repository";
 import { getPublicSiteSettings } from "../../../modules/settings/public-settings";
+import { ServiceFormClient } from "./service-form-client";
 import "./service-form.css";
 
 export default async function CategoryPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams?: Promise<{ form?: string }> }) {
@@ -27,7 +28,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             <p className="eyebrow">{settings.site_name.toUpperCase()} TEKNİK SERVİS</p>
             <h1>Servis talebini oluştur.</h1>
             <p className="heroText">
-              Cihaz bilgilerini ve yaşadığın sorunu yaz. Form tamamlandığında bilgiler hazır mesaj olarak Trove Teknoloji WhatsApp hattına aktarılır.
+              Cihazını seç, marka ve modele göre ilerle, arızayı belirt. Form tamamlandığında bilgiler hazır mesaj olarak Trove Teknoloji WhatsApp hattına aktarılır.
             </p>
           </section>
 
@@ -35,7 +36,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             <form action="/teknik-servis/whatsapp" className="serviceCustomerForm" method="get">
               <div className="serviceFormHeading">
                 <p className="eyebrow">SERVİS FORMU</p>
-                <h2>Cihaz bilgileri</h2>
+                <h2>Cihaz ve arıza bilgileri</h2>
                 <p>Zorunlu alanları doldur; son adımda WhatsApp açılacak.</p>
               </div>
 
@@ -47,48 +48,11 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                 <div className="adminError" role="alert">WhatsApp numarası henüz tanımlı değil. Lütfen Trove Teknoloji ile iletişime geç.</div>
               ) : null}
 
-              <div className="serviceFormGrid">
-                <label className="serviceField">
-                  <span>Ad Soyad *</span>
-                  <input autoComplete="name" maxLength={120} name="name" placeholder="Adınız ve soyadınız" required type="text" />
-                </label>
-
-                <label className="serviceField">
-                  <span>Telefon *</span>
-                  <input autoComplete="tel" inputMode="tel" maxLength={40} name="phone" placeholder="05xx xxx xx xx" required type="tel" />
-                </label>
-
-                <label className="serviceField">
-                  <span>Cihaz Türü *</span>
-                  <select defaultValue="" name="deviceType" required>
-                    <option disabled value="">Cihaz türünü seç</option>
-                    <option value="Telefon">Telefon</option>
-                    <option value="Laptop">Laptop</option>
-                    <option value="Masaüstü Bilgisayar">Masaüstü Bilgisayar</option>
-                    <option value="Tablet">Tablet</option>
-                    <option value="Diğer">Diğer</option>
-                  </select>
-                </label>
-
-                <label className="serviceField">
-                  <span>Marka / Model *</span>
-                  <input maxLength={160} name="brandModel" placeholder="Örn. iPhone 15 Pro" required type="text" />
-                </label>
-
-                <label className="serviceField serviceFieldWide">
-                  <span>Şikayet / Arıza *</span>
-                  <textarea maxLength={800} name="complaint" placeholder="Cihazda yaşadığınız sorunu mümkün olduğunca açık yazın." required rows={5} />
-                </label>
-
-                <label className="serviceField serviceFieldWide">
-                  <span>Ek Not</span>
-                  <textarea maxLength={800} name="note" placeholder="Varsa eklemek istediğiniz bilgi" rows={3} />
-                </label>
-              </div>
+              <ServiceFormClient />
 
               <div className="serviceFormActions">
                 <button className="primaryCta serviceSubmitButton" type="submit">WhatsApp ile servis talebi oluştur</button>
-                <small>Gönder butonuna bastığınızda bilgileriniz WhatsApp mesajına eklenir; mesajı siz gönderirsiniz.</small>
+                <small>Gönder butonuna bastığınızda cihaz bilgileriniz WhatsApp mesajına eklenir; mesajı siz gönderirsiniz.</small>
               </div>
             </form>
 
@@ -98,9 +62,9 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                 <h2>3 adımda hızlı servis.</h2>
               </div>
               <ol className="serviceSteps">
-                <li><strong>1</strong><span><b>Formu doldur</b>Cihaz ve arıza bilgilerini gir.</span></li>
-                <li><strong>2</strong><span><b>WhatsApp&apos;a geç</b>Bilgiler hazır mesaj olarak açılır.</span></li>
-                <li><strong>3</strong><span><b>Mesajı gönder</b>Servis ekibi seninle iletişime geçsin.</span></li>
+                <li><strong>1</strong><span><b>Cihazını seç</b>Tür, marka ve model seçimini yap.</span></li>
+                <li><strong>2</strong><span><b>Arızayı belirt</b>Hazır seçeneklerden sorunu seç ve gerekirse detay ekle.</span></li>
+                <li><strong>3</strong><span><b>WhatsApp&apos;a geç</b>Hazır mesajı gönder ve servis ekibi seninle iletişime geçsin.</span></li>
               </ol>
               <p className="servicePrivacyNote">Form bilgileri bu adımda sitede servis kaydı olarak tutulmaz; yalnızca WhatsApp mesajını hazırlamak için kullanılır.</p>
             </aside>
