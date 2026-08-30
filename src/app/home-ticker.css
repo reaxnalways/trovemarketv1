@@ -1,0 +1,78 @@
+.homeTicker {
+  width: 100%;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(48, 55, 71, 0.75);
+  background: #f6f7fb;
+  color: #080a0f;
+}
+
+.homeTickerViewport {
+  overflow: hidden;
+}
+
+.homeTickerTrack {
+  display: flex;
+  width: max-content;
+  animation: troveTicker 28s linear infinite;
+  will-change: transform;
+}
+
+.homeTickerGroup {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-width: max-content;
+}
+
+.homeTickerItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 11px 18px;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.homeTickerItem::after {
+  content: "•";
+  opacity: 0.4;
+}
+
+.homeTickerTrack:hover {
+  animation-play-state: paused;
+}
+
+.homeShell {
+  padding-top: 22px;
+}
+
+@keyframes troveTicker {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (min-width: 720px) {
+  .homeTickerItem {
+    gap: 24px;
+    padding: 12px 24px;
+    font-size: 0.82rem;
+  }
+
+  .homeShell {
+    padding-top: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homeTickerTrack {
+    animation: none;
+  }
+}
