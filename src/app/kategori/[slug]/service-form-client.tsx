@@ -73,6 +73,7 @@ const COMMON_FAULTS = [
 export function ServiceFormClient() {
   const [deviceType, setDeviceType] = useState<keyof typeof DEVICE_OPTIONS | "">("");
   const [brand, setBrand] = useState("");
+  const [selectedFaults, setSelectedFaults] = useState<string[]>([]);
 
   const brands = useMemo(() => (deviceType ? Object.keys(DEVICE_OPTIONS[deviceType]) : []), [deviceType]);
   const models = useMemo(() => {
@@ -81,11 +82,15 @@ export function ServiceFormClient() {
     return map[brand] ?? [];
   }, [deviceType, brand]);
 
+  function toggleFault(fault: string) {
+    setSelectedFaults((current) => current.includes(fault) ? current.filter((item) => item !== fault) : [...current, fault]);
+  }
+
   return (
     <div className="serviceFormGrid">
       <label className="serviceField">
         <span>Ad Soyad *</span>
-        <input autoComplete="name" maxLength={120} name="name" placeholder="Adınız ve soyadınız" required type="text" />
+        <input autoComplete="name" maxLength={120} name="name" required type="text" />
       </label>
 
       <label className="serviceField">
@@ -99,7 +104,7 @@ export function ServiceFormClient() {
             setBrand("");
           }}
         >
-          <option disabled value="">Cihaz türünü seç</option>
+          <option disabled value="">Seç</option>
           {Object.keys(DEVICE_OPTIONS).map((option) => <option key={option} value={option}>{option}</option>)}
         </select>
       </label>
@@ -107,7 +112,7 @@ export function ServiceFormClient() {
       <label className="serviceField">
         <span>Marka *</span>
         <select disabled={!deviceType} name="brand" required value={brand} onChange={(event) => setBrand(event.target.value)}>
-          <option disabled value="">{deviceType ? "Marka seç" : "Önce cihaz türünü seç"}</option>
+          <option disabled value="">Seç</option>
           {brands.map((option) => <option key={option} value={option}>{option}</option>)}
         </select>
       </label>
@@ -115,27 +120,41 @@ export function ServiceFormClient() {
       <label className="serviceField">
         <span>Model *</span>
         <select disabled={!brand} defaultValue="" key={`${deviceType}-${brand}`} name="model" required>
-          <option disabled value="">{brand ? "Model seç" : "Önce marka seç"}</option>
+          <option disabled value="">Seç</option>
           {models.map((option) => <option key={option} value={option}>{option}</option>)}
         </select>
       </label>
 
-      <label className="serviceField serviceFieldWide">
-        <span>Arıza / Şikayet *</span>
-        <select defaultValue="" name="complaint" required>
-          <option disabled value="">Hazır arıza seçeneği seç</option>
-          {COMMON_FAULTS.map((fault) => <option key={fault} value={fault}>{fault}</option>)}
-        </select>
-      </label>
+      <fieldset className="serviceField serviceFieldWide serviceFaultFieldset">
+        <legend>Arıza / Şikayet *</legend>
+        <div className="serviceFaultChecklist">
+          {COMMON_FAULTS.map((fault) => {
+            const checked = selectedFaults.includes(fault);
+            return (
+              <label className={`serviceFaultOption${checked ? " isSelected" : ""}`} key={fault}>
+                <input
+                  checked={checked}
+                  name="complaint"
+                  onChange={() => toggleFault(fault)}
+                  type="checkbox"
+                  value={fault}
+                />
+                <span>{fault}</span>
+              </label>
+            );
+          })}
+        </div>
+        <input name="complaintRequired" required type="text" value={selectedFaults.length ? "selected" : ""} readOnly tabIndex={-1} aria-hidden="true" className="serviceChecklistRequired" />
+      </fieldset>
 
       <label className="serviceField serviceFieldWide">
         <span>Arıza Detayı</span>
-        <textarea maxLength={800} name="complaintDetail" placeholder="Sorunu biraz daha tarif etmek isterseniz buraya yazabilirsiniz." rows={4} />
+        <textarea maxLength={800} name="complaintDetail" rows={4} />
       </label>
 
       <label className="serviceField serviceFieldWide">
         <span>Ek Not</span>
-        <textarea maxLength={800} name="note" placeholder="Varsa eklemek istediğiniz bilgi" rows={3} />
+        <textarea maxLength={800} name="note" rows={3} />
       </label>
     </div>
   );
