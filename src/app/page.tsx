@@ -58,7 +58,6 @@ export default async function HomePage() {
         <section className="homeDiscovery">
           <div className="homeDiscoveryCopy">
             <h1>Teknoloji ürünleri ve teknik servis.</h1>
-            <p>Güncel ürünleri incele, ihtiyacın olan kategoriye geç veya teknik servis talebi oluştur.</p>
           </div>
 
           <div className="homeQuickNav" aria-label="Kategori seçimi">
@@ -93,16 +92,14 @@ export default async function HomePage() {
         <section className="homeTwoColumn">
           <article className="homeActionPanel homeActionPanelAccent">
             <h2>Teknik servis</h2>
-            <p>{settings.service_intro}</p>
             <div className="heroActions">
-              <Link className="primaryCta" href="/kategori/teknik-servis">Servis formu</Link>
+              <Link className="primaryCta" href="/kategori/teknik-servis">Fiyat teklifi al</Link>
             </div>
           </article>
 
           {settings.whatsapp_number ? (
             <article className="homeActionPanel">
               <h2>WhatsApp</h2>
-              <p>Ürün, fiyat ve stok bilgisi için doğrudan iletişime geç.</p>
               <div className="heroActions">
                 <a className="primaryCta" href={whatsappUrl} rel="noreferrer" target="_blank">
                   Mesaj gönder
@@ -132,28 +129,28 @@ function ListingSection({ title, listings }: ListingSectionProps) {
         <div className="emptyState">Henüz yayınlanmış ürün bulunmuyor.</div>
       ) : (
         <div className="homeListingRail">
-          {listings.map((listing) => (
-            <Link className="listingCard listingCardLink" href={`/ilan/${listing.product_code}`} key={listing.id}>
-              <div className="listingMedia">
-                {listing.images[0] ? (
-                  <img alt={listing.title} className="listingImage" src={listing.images[0]} />
-                ) : (
-                  <span>TROVE</span>
-                )}
-              </div>
-              <div className="listingBody">
-                <span className="productCode">{listing.product_code}</span>
-                <h3>{listing.title}</h3>
-                <p className="listingMeta">
-                  {[listing.brand, listing.model].filter(Boolean).join(" · ") || "Ürün bilgisi"}
-                </p>
-                <div className="listingFooter">
-                  <strong>{formatListingPrice(listing.price)}</strong>
-                  <span>İncele →</span>
+          {listings.map((listing) => {
+            const productName = listing.model || listing.title;
+            const compactDetails = [productName, listing.storage].filter(Boolean).join(" ");
+
+            return (
+              <Link className="listingCard listingCardLink" href={`/ilan/${listing.product_code}`} key={listing.id}>
+                <div className="listingMedia">
+                  {listing.images[0] ? (
+                    <img alt={listing.title} className="listingImage" src={listing.images[0]} />
+                  ) : (
+                    <span>TROVE</span>
+                  )}
                 </div>
-              </div>
-            </Link>
-          ))}
+                <div className="listingBody">
+                  <h3>{compactDetails || listing.title}</h3>
+                  <div className="listingFooter">
+                    <strong>{formatListingPrice(listing.price)}</strong>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>
