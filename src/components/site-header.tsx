@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { FALLBACK_SITE_SETTINGS, type PublicSiteSettings } from "../modules/settings/public-settings";
+import {
+  FALLBACK_SITE_SETTINGS,
+  type PublicSiteSettings,
+} from "../modules/settings/public-settings";
 
 const navigation = [
   { href: "/kategori/telefon", label: "Telefon" },
@@ -23,26 +26,38 @@ export function SiteHeader({ settings = FALLBACK_SITE_SETTINGS }: SiteHeaderProp
             <img
               src={settings.logo_url}
               alt={siteName + " logo"}
-              width={36}
-              height={36}
-              style={{ width: 36, height: 36, maxWidth: 36, flex: "0 0 36px", objectFit: "contain", display: "block" }}
+              width={180}
+              height={40}
+              style={{
+                width: "auto",
+                height: "40px",
+                maxWidth: "180px",
+                objectFit: "contain",
+                display: "block",
+                flexShrink: 0,
+              }}
             />
           ) : (
-            <span className="siteBrandMark">T</span>
+            <>
+              <span className="siteBrandMark">T</span>
+              <span className="siteBrandText">
+                <strong>{siteName}</strong>
+              </span>
+            </>
           )}
-          <span className="siteBrandText">
-            <strong>{siteName}</strong>
-            <small>Teknoloji</small>
-          </span>
         </Link>
 
         <nav className="siteNav" aria-label="Ana navigasyon">
           {navigation.map((item) => (
-            <Link href={item.href} key={item.href}>{item.label}</Link>
+            <Link href={item.href} key={item.href}>
+              {item.label}
+            </Link>
           ))}
         </nav>
 
-        <Link className="headerServiceButton" href="/kategori/teknik-servis">Servis Desteği</Link>
+        <Link className="headerServiceButton" href="/kategori/teknik-servis">
+          Servis Desteği
+        </Link>
       </div>
     </header>
   );
