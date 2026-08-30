@@ -19,6 +19,7 @@ export async function saveSiteSettings(input: {
   whatsappNumber: string;
   whatsappDefaultMessage: string;
   logoUrl: string | null;
+  brandWordmarkUrl: string | null;
 }) {
   const values = normalizeSiteSettings(input);
   const supabase = await requireAdmin();
@@ -31,6 +32,7 @@ export async function saveSiteSettings(input: {
       whatsapp_number: values.whatsappNumber || null,
       whatsapp_default_message: values.whatsappDefaultMessage,
       logo_url: values.logoUrl,
+      brand_wordmark_url: values.brandWordmarkUrl,
       updated_at: new Date().toISOString(),
     })
     .eq("id", true);
