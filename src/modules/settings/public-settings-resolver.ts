@@ -4,6 +4,7 @@ export type PublicSiteSettings = {
   whatsapp_number: string | null;
   whatsapp_default_message: string;
   logo_url: string | null;
+  brand_wordmark_url: string | null;
   campaign_title: string | null;
   campaign_text: string | null;
   campaign_url: string | null;
@@ -16,6 +17,7 @@ export const FALLBACK_SITE_SETTINGS: PublicSiteSettings = {
   whatsapp_number: null,
   whatsapp_default_message: "Merhaba Trove Teknoloji, bilgi almak istiyorum.",
   logo_url: null,
+  brand_wordmark_url: null,
   campaign_title: null,
   campaign_text: null,
   campaign_url: null,
@@ -30,6 +32,7 @@ export function resolvePublicSiteSettings(data: Partial<PublicSiteSettings> | nu
     whatsapp_number: data.whatsapp_number?.trim() || null,
     whatsapp_default_message: data.whatsapp_default_message?.trim() || FALLBACK_SITE_SETTINGS.whatsapp_default_message,
     logo_url: data.logo_url?.trim() || null,
+    brand_wordmark_url: data.brand_wordmark_url?.trim() || null,
     campaign_title: data.campaign_title?.trim() || null,
     campaign_text: data.campaign_text?.trim() || null,
     campaign_url: data.campaign_url?.trim() || null,
