@@ -15,12 +15,13 @@ export function PurchaseForm({ productCode, bankName, accountHolder, iban }: Pro
   const [copied, setCopied] = useState<string | null>(null);
 
   async function copy(value: string, key: string) {
+    if (!value) return;
     await navigator.clipboard.writeText(value);
     setCopied(key);
     window.setTimeout(() => setCopied(null), 1400);
   }
 
-  return <form action={submitPurchaseRequest} className="purchaseForm">
+  return <form action={submitPurchaseRequest} className="purchaseForm" noValidate>
     <input type="hidden" name="productCode" value={productCode}/>
     <div className="purchaseSteps" aria-label="Satın alma adımları">
       {["Müşteri Bilgileri", "Fatura Bilgileri", "Ödeme Bilgileri"].map((label,index)=><button className={step===index+1?"active":""} key={label} type="button" onClick={()=>setStep(index+1)}><span>{index+1}</span>{label}</button>)}
@@ -57,7 +58,7 @@ export function PurchaseForm({ productCode, bankName, accountHolder, iban }: Pro
       <h3>Ödeme Bilgileri</h3><p>Talep gönderildikten sonra mağaza onayıyla Havale / EFT ödemesi yapılır.</p>
       <div className="purchasePaymentCard"><span>Ödeme yöntemi</span><strong>Havale / EFT</strong><div><small>Banka</small><b>{bankName || "-"}</b></div><div><small>Hesap sahibi</small><b>{accountHolder || "-"}</b><button type="button" onClick={()=>copy(accountHolder,"holder")}>{copied==="holder"?"Kopyalandı":"Kopyala"}</button></div><div><small>IBAN</small><b>{iban || "-"}</b><button type="button" onClick={()=>copy(iban.replace(/\s+/g,""),"iban")}>{copied==="iban"?"Kopyalandı":"Kopyala"}</button></div></div>
       <p className="purchasePaymentNotice">Bu form ödeme işlemi değildir. Talep mağaza tarafından doğrulandıktan sonra ödeme ve teslimat süreci başlatılır.</p>
-      <div className="purchaseStepActions"><button className="secondary" type="button" onClick={()=>setStep(2)}>← Geri</button><button type="submit">Satın Alma Talebi Oluştur</button></div>
+      <div className="purchaseStepActions"><button className="secondary" type="button" onClick={()=>setStep(2)}>← Geri</button><button type="submit">Satın Al</button></div>
     </section>
   </form>;
 }
