@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { HomepageSlide, HomepageSlideSection } from "../modules/homepage/slides";
+import type { HomepageSlide, HomepageSlideSection, HomepageSlideTransition } from "../modules/homepage/slides";
 import type { PublicSiteSettings } from "../modules/settings/public-settings";
 
 type Props = {
@@ -37,7 +37,8 @@ export function HomeSlider({ section, title, slides, motion }: Props) {
 
   useEffect(() => {
     const rail = railRef.current;
-    if (!rail || !motion.slider_autoplay || paused || slides.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const sectionNode = sectionRef.current;
+    if (!rail || !sectionNode || !motion.slider_autoplay || paused || slides.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let index = 0;
     const timer = window.setInterval(() => {
@@ -49,20 +50,21 @@ export function HomeSlider({ section, title, slides, motion }: Props) {
       const card = cards[index];
       if (!card) return;
 
+      const effect = (slides[index]?.transition_effect || motion.slider_transition) as HomepageSlideTransition;
+      sectionNode.dataset.transitionEffect = effect;
       rail.dataset.transitioning = "true";
-      // scrollIntoView sayfanın dikey konumunu da değiştirebildiği için yalnızca
-      // slider rayının yatay scroll değerini hareket ettiriyoruz.
       rail.scrollTo({ left: card.offsetLeft - rail.offsetLeft, behavior: "smooth" });
       window.setTimeout(() => { if (rail) delete rail.dataset.transitioning; }, 520);
     }, motion.slider_interval_seconds * 1000);
 
     return () => window.clearInterval(timer);
-  }, [motion.slider_autoplay, motion.slider_interval_seconds, paused, slides.length]);
+  }, [motion.slider_autoplay, motion.slider_interval_seconds, motion.slider_transition, paused, slides]);
 
   return (
     <section
       ref={sectionRef}
-      className={`homeSliderSection homeReveal reveal-${motion.slider_reveal_effect} transition-${motion.slider_transition} homeSliderSection${section === "campaigns" ? "Campaigns" : ""}`}
+      className={`homeSliderSection homeReveal reveal-${motion.slider_reveal_effect} homeSliderSection${section === "campaigns" ? "Campaigns" : ""}`}
+      data-transition-effect={motion.slider_transition}
       id={id}
       onMouseEnter={() => motion.slider_pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
