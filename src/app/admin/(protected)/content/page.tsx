@@ -9,7 +9,7 @@ export default async function ContentPage() {
   const { url, publishableKey } = getPublicSupabaseConfig();
   const { data } = await supabase
     .from("homepage_slides")
-    .select("id,section,title,subtitle,image_url,link_url,sort_order,is_active")
+    .select("id,section,title,subtitle,image_url,link_url,sort_order,is_active,transition_effect")
     .order("section")
     .order("sort_order", { ascending: true });
 
