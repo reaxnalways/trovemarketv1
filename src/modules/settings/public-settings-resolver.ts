@@ -5,6 +5,7 @@ export type PublicSiteSettings = {
   site_name: string; site_tagline: string; whatsapp_number: string | null; whatsapp_default_message: string;
   logo_url: string | null; brand_wordmark_url: string | null; app_icon_url: string | null;
   contact_email: string | null; contact_phone: string | null; instagram_url: string | null; company_address: string | null; about_text: string | null;
+  purchase_enabled: boolean; bank_name: string | null; bank_account_holder: string | null; iban: string | null;
   site_meta_title: string; site_meta_description: string; pwa_name: string;
   campaign_title: string | null; campaign_text: string | null; campaign_url: string | null; service_intro: string;
   announcement_enabled: boolean; announcement_items: string[]; announcement_speed_seconds: number; announcement_pause_on_hover: boolean;
@@ -15,6 +16,7 @@ export const FALLBACK_SITE_SETTINGS: PublicSiteSettings = {
   site_name: "Trove Teknoloji", site_tagline: "Teknoloji alışverişi ve servis, tek yerde.", whatsapp_number: null,
   whatsapp_default_message: "Merhaba Trove Teknoloji, bilgi almak istiyorum.", logo_url: null, brand_wordmark_url: null, app_icon_url: null,
   contact_email: null, contact_phone: null, instagram_url: null, company_address: null, about_text: null,
+  purchase_enabled: false, bank_name: null, bank_account_holder: null, iban: null,
   site_meta_title: "Trove Teknoloji", site_meta_description: "Teknoloji ilan, teknik servis ve ürün takip platformu", pwa_name: "Trove Teknoloji",
   campaign_title: null, campaign_text: null, campaign_url: null,
   service_intro: "Telefon, laptop ve bilgisayar servis ihtiyaçların için hızlıca iletişime geç.",
@@ -48,6 +50,10 @@ export function resolvePublicSiteSettings(data: Partial<PublicSiteSettings> | nu
     instagram_url: data.instagram_url?.trim() || null,
     company_address: data.company_address?.trim() || null,
     about_text: data.about_text?.trim() || null,
+    purchase_enabled: data.purchase_enabled ?? false,
+    bank_name: data.bank_name?.trim() || null,
+    bank_account_holder: data.bank_account_holder?.trim() || null,
+    iban: data.iban?.replace(/\s+/g, "").trim() || null,
     site_meta_title: data.site_meta_title?.trim() || data.site_name?.trim() || FALLBACK_SITE_SETTINGS.site_meta_title,
     site_meta_description: data.site_meta_description?.trim() || data.site_tagline?.trim() || FALLBACK_SITE_SETTINGS.site_meta_description,
     pwa_name: data.pwa_name?.trim() || data.site_name?.trim() || FALLBACK_SITE_SETTINGS.pwa_name,
