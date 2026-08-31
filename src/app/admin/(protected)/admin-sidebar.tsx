@@ -24,8 +24,10 @@ const navGroups = [
     items: [
       { label: "Servis kayıtları", href: "/admin/technical-service#servis-kayitlari" },
       { label: "Yeni servis kaydı", href: "/admin/technical-service#yeni-kayit" },
+      { label: "Servis fiyat referansları", href: "/admin/technical-service/prices" },
       { label: "Servis barkodu", href: "/admin/technical-service/scanner" },
       { label: "Arşiv", href: "/admin/technical-service#arsiv" },
+      { label: "Servis formunu aç", href: "/kategori/teknik-servis", external: true },
     ],
   },
   {
