@@ -20,6 +20,7 @@ const sections: { key: HomepageSlideSection; title: string }[] = [
 export default async function HomePage() {
   const [slides, settings] = await Promise.all([listPublicHomepageSlides(), getPublicSiteSettings()]);
   const digits = settings.whatsapp_number?.replace(/\D/g, "") ?? "";
+  const telDigits = settings.contact_phone?.replace(/[^+\d]/g, "") ?? "";
   const motion = {
     slider_autoplay: settings.slider_autoplay,
     slider_interval_seconds: settings.slider_interval_seconds,
@@ -62,7 +63,14 @@ export default async function HomePage() {
         <div className="siteFooterInner">
           <div className="siteFooterBrand"><strong>{settings.site_name}</strong><span>{settings.site_tagline || "Teknoloji, ürün ve servis."}</span></div>
           <nav className="siteFooterLinks" aria-label="Alt menü">
-            <Link href="/kategori/telefon">Ürünler</Link><Link href="/takas">Takas</Link><Link href="/kategori/teknik-servis">Teknik Servis</Link>{digits ? <a href={`https://wa.me/${digits}`} rel="noreferrer" target="_blank">WhatsApp</a> : null}
+            <Link href="/hakkimizda">Hakkımızda</Link>
+            <Link href="/kategori/telefon">Ürünler</Link>
+            <Link href="/takas">Takas</Link>
+            <Link href="/kategori/teknik-servis">Teknik Servis</Link>
+            {settings.contact_email ? <a href={`mailto:${settings.contact_email}`}>E-posta</a> : null}
+            {telDigits ? <a href={`tel:${telDigits}`}>Telefon</a> : null}
+            {digits ? <a href={`https://wa.me/${digits}`} rel="noreferrer" target="_blank">WhatsApp</a> : null}
+            {settings.instagram_url ? <a href={settings.instagram_url} rel="noreferrer" target="_blank">Instagram</a> : null}
           </nav>
         </div>
       </footer>
