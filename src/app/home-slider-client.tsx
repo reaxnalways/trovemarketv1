@@ -38,15 +38,24 @@ export function HomeSlider({ section, title, slides, motion }: Props) {
   useEffect(() => {
     const rail = railRef.current;
     if (!rail || !motion.slider_autoplay || paused || slides.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     let index = 0;
     const timer = window.setInterval(() => {
+      if (document.hidden) return;
       const cards = Array.from(rail.querySelectorAll<HTMLElement>(".homeSlideCard"));
       if (!cards.length) return;
+
       index = (index + 1) % cards.length;
+      const card = cards[index];
+      if (!card) return;
+
       rail.dataset.transitioning = "true";
-      cards[index]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+      // scrollIntoView sayfanın dikey konumunu da değiştirebildiği için yalnızca
+      // slider rayının yatay scroll değerini hareket ettiriyoruz.
+      rail.scrollTo({ left: card.offsetLeft - rail.offsetLeft, behavior: "smooth" });
       window.setTimeout(() => { if (rail) delete rail.dataset.transitioning; }, 520);
     }, motion.slider_interval_seconds * 1000);
+
     return () => window.clearInterval(timer);
   }, [motion.slider_autoplay, motion.slider_interval_seconds, paused, slides.length]);
 
