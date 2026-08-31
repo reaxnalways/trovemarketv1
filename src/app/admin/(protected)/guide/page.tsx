@@ -1,4 +1,5 @@
 import Link from "next/link";
+import "./guide.css";
 
 const sections = [
   ["1. Genel Bakış", ["Admin paneline giriş yaptıktan sonra Genel Bakış ekranı günlük işlemlerin başlangıç noktasıdır.", "Yeni ürün ekle, Barkod tara, Servis kaydı aç ve Takas fiyatları kısayollarını kullan.", "İşlem bekleyen alanından taslak ürünleri ve aktif servisleri takip et."]],
