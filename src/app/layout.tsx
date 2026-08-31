@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { getPublicSiteSettings } from "../modules/settings/public-settings";
+import { SiteFooter } from "../components/site-footer";
 import "./globals.css";
 
 export const viewport: Viewport = { themeColor: "#080a0f" };
@@ -22,5 +23,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="tr"><body>{children}</body></html>;
+  return <html lang="tr"><body>{children}<SiteFooter /></body></html>;
 }
