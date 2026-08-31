@@ -21,16 +21,28 @@ const navGroups = [
     ],
   },
   {
-    label: "Ayarlar",
+    label: "Site",
     items: [
-      { label: "Şirket ayarları", href: "/admin/settings/company" },
-      { label: "Site ayarları", href: "/admin/settings/site" },
-      { label: "Ana sayfa ayarları", href: "/admin/settings/homepage" },
       { label: "Slider görselleri", href: "/admin/content" },
+      { label: "Ana sayfa ayarları", href: "/admin/settings/homepage" },
+      { label: "Şirket & iletişim", href: "/admin/settings/company" },
+      { label: "Site kimliği", href: "/admin/settings/site" },
       { label: "Tüm ayarlar", href: "/admin/settings" },
     ],
   },
-];
+  {
+    label: "Sayfalar",
+    items: [
+      { label: "Ana sayfa", href: "/", external: true },
+      { label: "Telefonlar", href: "/kategori/telefon", external: true },
+      { label: "Bilgisayarlar", href: "/kategori/laptop-bilgisayar", external: true },
+      { label: "Takas", href: "/takas", external: true },
+      { label: "Teknik servis", href: "/kategori/teknik-servis", external: true },
+      { label: "Hakkımızda", href: "/hakkimizda", external: true },
+      { label: "İletişim", href: "/iletisim", external: true },
+    ],
+  },
+] as const;
 
 export function AdminSidebar() {
   return (
@@ -38,7 +50,7 @@ export function AdminSidebar() {
       <div className="adminSidebarBrand">
         <Link href="/admin" className="adminSidebarBrandLink">
           <span className="adminSidebarMark">T</span>
-          <span><strong>Trove Teknoloji</strong><small>Yönetim</small></span>
+          <span><strong>Trove Teknoloji</strong><small>Yönetim Paneli</small></span>
         </Link>
       </div>
       <nav className="adminSidebarNav" aria-label="Admin menüsü">
@@ -47,13 +59,15 @@ export function AdminSidebar() {
           <details className="adminSidebarGroup" key={group.label}>
             <summary>{group.label}<span aria-hidden="true">⌄</span></summary>
             <div className="adminSidebarGroupItems">
-              {group.items.map((item) => <Link className="adminSidebarItem" href={item.href} key={item.label}>{item.label}</Link>)}
+              {group.items.map((item) => <Link className="adminSidebarItem" href={item.href} key={item.label} target={"external" in item && item.external ? "_blank" : undefined}>{item.label}{"external" in item && item.external ? <span aria-hidden="true">↗</span> : null}</Link>)}
             </div>
           </details>
         ))}
-        <Link className="adminSidebarHome" href="/" target="_blank">Siteyi aç</Link>
       </nav>
-      <form action={logoutAdmin} className="adminSidebarLogout"><button type="submit">Çıkış</button></form>
+      <div className="adminSidebarFooter">
+        <Link className="adminSidebarSiteButton" href="/" target="_blank">Siteyi aç ↗</Link>
+        <form action={logoutAdmin} className="adminSidebarLogout"><button type="submit">Çıkış</button></form>
+      </div>
     </aside>
   );
 }
