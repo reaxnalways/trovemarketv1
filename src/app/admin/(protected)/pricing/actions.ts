@@ -29,7 +29,7 @@ export async function applyBulkPriceUpdate(formData: FormData) {
   }
 
   const supabase = await requireAdmin();
-  const { data, error } = await supabase.rpc("bulk_reindex_product_prices", {
+  const { data, error } = await supabase.rpc("bulk_reindex_all_prices", {
     p_base_rate: baseRate,
     p_target_rate: targetRate,
     p_rounding_step: roundingStep,
@@ -43,6 +43,10 @@ export async function applyBulkPriceUpdate(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath("/admin/pricing");
+  revalidatePath("/admin/trade-in");
+  revalidatePath("/admin/trade-in/costs");
+  revalidatePath("/admin/technical-service/prices");
+  revalidatePath("/takas");
 
   redirect(`/admin/pricing?updated=${Number(data ?? 0)}&rate=${encodeURIComponent(String(targetRate))}`);
 }
