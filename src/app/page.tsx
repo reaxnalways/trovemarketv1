@@ -1,158 +1,88 @@
 import Link from "next/link";
 import { SiteHeader } from "../components/site-header";
-import { listPublicCategories } from "../modules/categories/repository";
-import {
-  listFeaturedListings,
-  listRecentListings,
-} from "../modules/listings/repository";
-import { formatListingPrice } from "../modules/listings/public-listings";
+import { listPublicHomepageSlides, type HomepageSlide, type HomepageSlideSection } from "../modules/homepage/slides";
 import { getPublicSiteSettings } from "../modules/settings/public-settings";
-import "./home-ticker.css";
-import "./home-flow.css";
+import "./home-showcase.css";
 
 export const dynamic = "force-dynamic";
 
-const tickerItems = [
-  "Sıfır & ikinci el telefonlar",
-  "Laptop & bilgisayar",
-  "Bilgisayar parçaları",
-  "Hızlı teknik servis",
-  "WhatsApp iletişim",
+const sections: { key: HomepageSlideSection; title: string }[] = [
+  { key: "campaigns", title: "Kampanyalar" },
+  { key: "phones", title: "Telefonlar" },
+  { key: "computers", title: "Bilgisayarlar" },
+  { key: "wearables", title: "Giyilebilir Teknoloji" },
+  { key: "accessories", title: "Aksesuarlar & Yedek Parçalar" },
 ];
 
 export default async function HomePage() {
-  const [categories, featuredListings, recentListings, settings] =
-    await Promise.all([
-      listPublicCategories(),
-      listFeaturedListings(),
-      listRecentListings(),
-      getPublicSiteSettings(),
-    ]);
-
+  const [slides, settings] = await Promise.all([listPublicHomepageSlides(), getPublicSiteSettings()]);
   const digits = settings.whatsapp_number?.replace(/\D/g, "") ?? "";
-  const whatsappUrl = `https://wa.me/${digits}?text=${encodeURIComponent(
-    settings.whatsapp_default_message,
-  )}`;
 
   return (
     <>
       <SiteHeader settings={settings} />
+      <main className="shell homeShowcase">
+        <nav className="homePrimaryNav" aria-label="Ana işlemler">
+          <Link href="#telefonlar">Ürünler</Link>
+          <Link href="/takas">Takas</Link>
+          <Link href="/kategori/teknik-servis">Teknik Servis</Link>
+        </nav>
 
-      <div className="homeTicker" aria-label="Trove Teknoloji duyuruları">
-        <div className="homeTickerViewport">
-          <div className="homeTickerTrack">
-            {[0, 1].map((group) => (
-              <div className="homeTickerGroup" aria-hidden={group === 1} key={group}>
-                {tickerItems.map((item) => (
-                  <span className="homeTickerItem" key={`${group}-${item}`}>
-                    {item}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <main className="shell homeExperience">
-        <section className="homeDiscovery">
-          <div className="homeDiscoveryCopy">
-            <h1>Teknoloji ürünleri ve teknik servis.</h1>
-          </div>
-
-          <div className="homeQuickNav" aria-label="Kategori seçimi">
-            <div className="homeQuickNavTrack">
-              {categories.map((category) => (
-                <Link className="homeQuickCard" href={`/kategori/${category.slug}`} key={category.id}>
-                  <strong>{category.name}</strong>
-                  <span>İncele →</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {settings.campaign_title ? (
-          <section className="hero homeCampaign">
-            <div className="heroCopy">
-              <h2>{settings.campaign_title}</h2>
-              {settings.campaign_text ? <p className="heroText">{settings.campaign_text}</p> : null}
-              {settings.campaign_url ? (
-                <div className="heroActions">
-                  <a className="primaryCta" href={settings.campaign_url}>Kampanyayı gör</a>
-                </div>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
-        <ListingSection title="Öne çıkan ürünler" listings={featuredListings} />
-        <ListingSection title="Yeni eklenenler" listings={recentListings} />
-
-        <section className="homeTwoColumn">
-          <article className="homeActionPanel homeActionPanelAccent">
-            <h2>Teknik servis</h2>
-            <div className="heroActions">
-              <Link className="primaryCta" href="/kategori/teknik-servis">Fiyat teklifi al</Link>
-            </div>
-          </article>
-
-          {settings.whatsapp_number ? (
-            <article className="homeActionPanel">
-              <h2>WhatsApp</h2>
-              <div className="heroActions">
-                <a className="primaryCta" href={whatsappUrl} rel="noreferrer" target="_blank">
-                  Mesaj gönder
-                </a>
-              </div>
-            </article>
-          ) : null}
-        </section>
+        {sections.map((section) => (
+          <SliderSection
+            key={section.key}
+            section={section.key}
+            slides={slides.filter((slide) => slide.section === section.key)}
+            title={section.title}
+          />
+        ))}
       </main>
+
+      <footer className="siteFooter">
+        <div className="siteFooterInner">
+          <div className="siteFooterBrand">
+            <strong>{settings.site_name}</strong>
+            <span>{settings.site_tagline || "Teknoloji, ürün ve servis."}</span>
+          </div>
+          <nav className="siteFooterLinks" aria-label="Alt menü">
+            <Link href="#telefonlar">Ürünler</Link>
+            <Link href="/takas">Takas</Link>
+            <Link href="/kategori/teknik-servis">Teknik Servis</Link>
+            {digits ? <a href={`https://wa.me/${digits}`} rel="noreferrer" target="_blank">WhatsApp</a> : null}
+          </nav>
+        </div>
+      </footer>
     </>
   );
 }
 
-type ListingSectionProps = {
-  title: string;
-  listings: Awaited<ReturnType<typeof listRecentListings>>;
-};
+function SliderSection({ section, title, slides }: { section: HomepageSlideSection; title: string; slides: HomepageSlide[] }) {
+  const id = section === "phones" ? "telefonlar" : section;
+  const displaySlides = slides.length ? slides : [null, null, null];
 
-function ListingSection({ title, listings }: ListingSectionProps) {
   return (
-    <section className="homeSection">
-      <div className="homeSectionHeader">
-        <h2>{title}</h2>
-      </div>
-
-      {listings.length === 0 ? (
-        <div className="emptyState">Henüz yayınlanmış ürün bulunmuyor.</div>
-      ) : (
-        <div className="homeListingRail">
-          {listings.map((listing) => {
-            const productName = listing.model || listing.title;
-            const compactDetails = [productName, listing.storage].filter(Boolean).join(" ");
-
+    <section className={`homeSliderSection homeSliderSection${section === "campaigns" ? "Campaigns" : ""}`} id={id}>
+      <div className="homeSliderHeader"><h2>{title}</h2></div>
+      <div className="homeSliderRail">
+        {displaySlides.map((slide, index) => {
+          if (!slide) {
             return (
-              <Link className="listingCard listingCardLink" href={`/ilan/${listing.product_code}`} key={listing.id}>
-                <div className="listingMedia">
-                  {listing.images[0] ? (
-                    <img alt={listing.title} className="listingImage" src={listing.images[0]} />
-                  ) : (
-                    <span>TROVE</span>
-                  )}
-                </div>
-                <div className="listingBody">
-                  <h3>{compactDetails || listing.title}</h3>
-                  <div className="listingFooter">
-                    <strong>{formatListingPrice(listing.price)}</strong>
-                  </div>
-                </div>
-              </Link>
+              <div className="homeSlideCard" key={`placeholder-${section}-${index}`}>
+                <div className="homeSlidePlaceholder"><div><strong>{title}</strong><span>Görsel admin panelinden eklenecek</span></div></div>
+              </div>
             );
-          })}
-        </div>
-      )}
+          }
+
+          const content = (
+            <>
+              <img alt={slide.title || title} src={slide.image_url} />
+              {slide.title || slide.subtitle ? <div className="homeSlideOverlay">{slide.title ? <strong>{slide.title}</strong> : null}{slide.subtitle ? <span>{slide.subtitle}</span> : null}</div> : null}
+            </>
+          );
+
+          return slide.link_url ? <a className="homeSlideCard" href={slide.link_url} key={slide.id}>{content}</a> : <div className="homeSlideCard" key={slide.id}>{content}</div>;
+        })}
+      </div>
     </section>
   );
 }
