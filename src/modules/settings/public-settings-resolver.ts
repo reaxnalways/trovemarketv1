@@ -8,6 +8,9 @@ export type PublicSiteSettings = {
   whatsapp_default_message: string;
   logo_url: string | null;
   brand_wordmark_url: string | null;
+  site_meta_title: string;
+  site_meta_description: string;
+  pwa_name: string;
   campaign_title: string | null;
   campaign_text: string | null;
   campaign_url: string | null;
@@ -30,6 +33,9 @@ export const FALLBACK_SITE_SETTINGS: PublicSiteSettings = {
   whatsapp_default_message: "Merhaba Trove Teknoloji, bilgi almak istiyorum.",
   logo_url: null,
   brand_wordmark_url: null,
+  site_meta_title: "Trove Teknoloji",
+  site_meta_description: "Teknoloji ilan, teknik servis ve ürün takip platformu",
+  pwa_name: "Trove Teknoloji",
   campaign_title: null,
   campaign_text: null,
   campaign_url: null,
@@ -55,7 +61,6 @@ export function resolvePublicSiteSettings(data: Partial<PublicSiteSettings> | nu
   const transition: SliderTransition = data.slider_transition === "fade" || data.slider_transition === "zoom" ? data.slider_transition : "slide";
   const reveal: SliderRevealEffect = ["rise", "fade", "zoom", "none"].includes(String(data.slider_reveal_effect)) ? data.slider_reveal_effect as SliderRevealEffect : "rise";
   const items = Array.isArray(data.announcement_items) ? data.announcement_items.map((item) => String(item).trim()).filter(Boolean).slice(0, 12) : [];
-
   return {
     site_name: data.site_name?.trim() || FALLBACK_SITE_SETTINGS.site_name,
     site_tagline: data.site_tagline?.trim() || FALLBACK_SITE_SETTINGS.site_tagline,
@@ -63,6 +68,9 @@ export function resolvePublicSiteSettings(data: Partial<PublicSiteSettings> | nu
     whatsapp_default_message: data.whatsapp_default_message?.trim() || FALLBACK_SITE_SETTINGS.whatsapp_default_message,
     logo_url: data.logo_url?.trim() || null,
     brand_wordmark_url: data.brand_wordmark_url?.trim() || null,
+    site_meta_title: data.site_meta_title?.trim() || data.site_name?.trim() || FALLBACK_SITE_SETTINGS.site_meta_title,
+    site_meta_description: data.site_meta_description?.trim() || data.site_tagline?.trim() || FALLBACK_SITE_SETTINGS.site_meta_description,
+    pwa_name: data.pwa_name?.trim() || data.site_name?.trim() || FALLBACK_SITE_SETTINGS.pwa_name,
     campaign_title: data.campaign_title?.trim() || null,
     campaign_text: data.campaign_text?.trim() || null,
     campaign_url: data.campaign_url?.trim() || null,
