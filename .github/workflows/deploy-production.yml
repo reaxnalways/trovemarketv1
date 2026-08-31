@@ -20,11 +20,11 @@ jobs:
     timeout-minutes: 25
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: https://rklqihkhlemxovvedkag.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Y7RY2Zaw6OrkjWShN0TYCw_YOAqSYIy
       TROVE_ADMIN_EMAILS: ${{ secrets.TROVE_ADMIN_EMAILS }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ACCOUNT_ID: 1cb4359ac870fb5ff1ecaac8f8b51279
       VINEXT_KV_NAMESPACE_ID: cce65f3d53d544c5b066fe75ff8723a0
       CLOUDFLARE_WORKER_NAME: trovemarketv1
 
@@ -35,14 +35,8 @@ jobs:
       - name: Verify deployment environment
         shell: bash
         run: |
-          missing=0
-          for key in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
-            if [ -z "${!key}" ]; then
-              echo "::error::$key GitHub Actions secret is missing."
-              missing=1
-            fi
-          done
-          if [ "$missing" -ne 0 ]; then
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN GitHub Actions secret is missing."
             exit 1
           fi
 
@@ -96,7 +90,6 @@ jobs:
         run: npx vinext build
 
       - name: Deploy Cloudflare Worker
-        id: deploy
         shell: bash
         run: |
           set -euo pipefail
