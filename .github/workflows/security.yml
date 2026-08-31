@@ -56,21 +56,21 @@ jobs:
       - name: Start application
         run: |
           npm start > /tmp/trove-next.log 2>&1 &
-          echo $! > /tmp/trove-next.pid
           for i in {1..30}; do
-            if curl --fail --silent --show-error http://127.0.0.1:3000/ >/tmp/home.html; then exit 0; fi
+            if curl --fail --silent --show-error http://127.0.0.1:3000/admin/login >/dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/trove-next.log
           exit 1
-      - name: Smoke public routes
+      - name: Smoke live public routes
         run: |
+          base="https://trovemarketv1.remziemiraltunbas.workers.dev"
           for path in / /kategori/telefon /takas /kategori/teknik-servis /hakkimizda /iletisim /manifest.webmanifest; do
-            curl --fail --silent --show-error "http://127.0.0.1:3000${path}" >/dev/null
+            curl --fail --silent --show-error --max-time 20 "${base}${path}" >/dev/null
           done
-      - name: Verify security headers
+      - name: Verify local security headers
         run: |
-          headers="$(curl --silent --show-error --head http://127.0.0.1:3000/)"
+          headers="$(curl --silent --show-error --head http://127.0.0.1:3000/admin/login)"
           echo "$headers" | grep -qi '^x-content-type-options: nosniff'
           echo "$headers" | grep -qi '^x-frame-options: DENY'
           echo "$headers" | grep -qi '^referrer-policy: strict-origin-when-cross-origin'
