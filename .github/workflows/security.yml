@@ -1,0 +1,78 @@
+name: Security and Smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/analyze@v3
+
+  smoke-and-headers:
+    name: Smoke and security headers
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Start application
+        run: |
+          npm start > /tmp/trove-next.log 2>&1 &
+          echo $! > /tmp/trove-next.pid
+          for i in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/ >/tmp/home.html; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/trove-next.log
+          exit 1
+      - name: Smoke public routes
+        run: |
+          for path in / /kategori/telefon /takas /kategori/teknik-servis /hakkimizda /iletisim /manifest.webmanifest; do
+            curl --fail --silent --show-error "http://127.0.0.1:3000${path}" >/dev/null
+          done
+      - name: Verify security headers
+        run: |
+          headers="$(curl --silent --show-error --head http://127.0.0.1:3000/)"
+          echo "$headers" | grep -qi '^x-content-type-options: nosniff'
+          echo "$headers" | grep -qi '^x-frame-options: DENY'
+          echo "$headers" | grep -qi '^referrer-policy: strict-origin-when-cross-origin'
+          echo "$headers" | grep -qi '^permissions-policy: camera=(self), microphone=(), geolocation=()'
+          echo "$headers" | grep -qi '^strict-transport-security: max-age=31536000'
