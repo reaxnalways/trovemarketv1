@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  deployments: write
 
 concurrency:
   group: production-deploy
@@ -16,24 +15,28 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy production
+    name: Deploy production to Cloudflare Workers
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      TROVE_ADMIN_EMAILS: ${{ secrets.TROVE_ADMIN_EMAILS }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VINEXT_KV_NAMESPACE_ID: cce65f3d53d544c5b066fe75ff8723a0
+      CLOUDFLARE_WORKER_NAME: trovemarketv1
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify deployment credentials
+      - name: Verify deployment environment
         shell: bash
         run: |
           missing=0
-          for key in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+          for key in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
             if [ -z "${!key}" ]; then
               echo "::error::$key GitHub Actions secret is missing."
               missing=1
@@ -49,32 +52,72 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
+      - name: Install application dependencies
         run: npm ci
 
-      - name: Pull production environment
-        run: npx --yes vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - name: Test
+        run: npm test
 
-      - name: Build for Vercel
-        run: npx --yes vercel@latest build --prod --token="$VERCEL_TOKEN"
+      - name: Initialize Vinext Cloudflare build
+        shell: bash
+        run: |
+          npx --yes vinext@1.0.0-beta.6 init \
+            --skip-check \
+            --platform=cloudflare \
+            --data-cache=kv \
+            --image-optimization=cloudflare-images
 
-      - name: Deploy production
+      - name: Configure Cloudflare bindings and runtime variables
+        shell: bash
+        run: |
+          node <<'NODE'
+          import fs from "node:fs";
+
+          const path = "wrangler.jsonc";
+          const config = JSON.parse(fs.readFileSync(path, "utf8"));
+
+          config.name = process.env.CLOUDFLARE_WORKER_NAME;
+          config.kv_namespaces = (config.kv_namespaces ?? []).map((item) =>
+            item.binding === "VINEXT_KV_CACHE"
+              ? { ...item, id: process.env.VINEXT_KV_NAMESPACE_ID }
+              : item
+          );
+          config.vars = {
+            ...(config.vars ?? {}),
+            NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+            TROVE_ADMIN_EMAILS: process.env.TROVE_ADMIN_EMAILS ?? "",
+          };
+
+          fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
+          NODE
+
+      - name: Build Vinext Worker
+        run: npx vinext build
+
+      - name: Deploy Cloudflare Worker
         id: deploy
         shell: bash
         run: |
-          url=$(npx --yes vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN")
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "Production URL: $url"
+          set -euo pipefail
+          config="$(find dist -name wrangler.json -type f | head -n 1)"
+          if [ -z "$config" ]; then
+            echo "::error::Vinext generated wrangler.json was not found."
+            exit 1
+          fi
+          echo "Using generated config: $config"
+          npx wrangler deploy --config "$config"
 
       - name: Verify live health endpoint
         shell: bash
         run: |
-          url="${{ steps.deploy.outputs.url }}"
+          url="https://${CLOUDFLARE_WORKER_NAME}.remziemiraltunbas.workers.dev"
           for attempt in 1 2 3 4 5; do
             if curl --fail --silent --show-error "$url/api/health"; then
+              echo "Production healthy: $url"
               exit 0
             fi
             sleep 5
           done
-          echo "::error::Production health check failed."
+          echo "::error::Production health check failed at $url/api/health"
           exit 1
