@@ -21,11 +21,13 @@ const navGroups = [
     ],
   },
   {
-    label: "Site",
+    label: "Ayarlar",
     items: [
-      { label: "Ana sayfa sliderları", href: "/admin/content" },
-      { label: "Site ayarları", href: "/admin/settings" },
-      { label: "Ana sayfayı aç", href: "/", external: true },
+      { label: "Şirket ayarları", href: "/admin/settings/company" },
+      { label: "Site ayarları", href: "/admin/settings/site" },
+      { label: "Ana sayfa ayarları", href: "/admin/settings/homepage" },
+      { label: "Slider görselleri", href: "/admin/content" },
+      { label: "Tüm ayarlar", href: "/admin/settings" },
     ],
   },
 ];
@@ -45,19 +47,11 @@ export function AdminSidebar() {
           <details className="adminSidebarGroup" key={group.label}>
             <summary>{group.label}<span aria-hidden="true">⌄</span></summary>
             <div className="adminSidebarGroupItems">
-              {group.items.map((item) => (
-                <Link
-                  className="adminSidebarItem"
-                  href={item.href}
-                  key={item.label}
-                  target={"external" in item && item.external ? "_blank" : undefined}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {group.items.map((item) => <Link className="adminSidebarItem" href={item.href} key={item.label}>{item.label}</Link>)}
             </div>
           </details>
         ))}
+        <Link className="adminSidebarHome" href="/" target="_blank">Siteyi aç</Link>
       </nav>
       <form action={logoutAdmin} className="adminSidebarLogout"><button type="submit">Çıkış</button></form>
     </aside>
