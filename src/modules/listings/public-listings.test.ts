@@ -11,6 +11,7 @@ test("returns public listings from the repository query", async () => {
         title: "iPhone 15 Pro",
         brand: "Apple",
         model: "iPhone 15 Pro",
+        storage: "256 GB",
         price: 50000,
         images: [],
         stock_status: "in_stock",
