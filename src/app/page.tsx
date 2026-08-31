@@ -31,6 +31,23 @@ export default async function HomePage() {
   return (
     <>
       <SiteHeader settings={settings} />
+
+      <div className="homeHeaderActionsWrap">
+        <nav className="homePrimaryNav homePrimaryNavNotch" aria-label="Ana işlemler">
+          <details className="homeProductsMenu">
+            <summary>Ürünler <span aria-hidden="true">⌄</span></summary>
+            <div className="homeProductsDropdown">
+              <Link href="/kategori/telefon">Telefonlar</Link>
+              <Link href="/kategori/laptop-bilgisayar">Bilgisayarlar</Link>
+              <Link href="/kategori/giyilebilir-teknoloji">Giyilebilir Teknoloji</Link>
+              <Link href="/kategori/aksesuar-yedek-parca">Aksesuar & Yedek Parça</Link>
+            </div>
+          </details>
+          <Link href="/takas">Takas</Link>
+          <Link href="/kategori/teknik-servis">Teknik Servis</Link>
+        </nav>
+      </div>
+
       {settings.announcement_enabled ? (
         <div className={`homeTicker${settings.announcement_pause_on_hover ? "" : " homeTickerNoPause"}`} aria-label="Trove Teknoloji duyuruları" style={{ "--ticker-duration": `${settings.announcement_speed_seconds}s` } as CSSProperties}>
           <div className="homeTickerViewport"><div className="homeTickerTrack">{[0, 1].map((group) => <div className="homeTickerGroup" aria-hidden={group === 1} key={group}>{settings.announcement_items.map((item) => <span className="homeTickerItem" key={`${group}-${item}`}>{item}</span>)}</div>)}</div></div>
@@ -38,19 +55,6 @@ export default async function HomePage() {
       ) : null}
 
       <main className="shell homeShowcase">
-        <nav className="homePrimaryNav" aria-label="Ana işlemler">
-          <details className="homeProductsMenu">
-            <summary>Ürünler <span aria-hidden="true">⌄</span></summary>
-            <div className="homeProductsDropdown">
-              <Link href="/kategori/telefon">Telefonlar</Link>
-              <Link href="/kategori/laptop-bilgisayar">Laptop & Bilgisayar</Link>
-              <Link href="/kategori/bilgisayar-parcalari">Bilgisayar Parçaları</Link>
-            </div>
-          </details>
-          <Link href="/takas">Takas</Link>
-          <Link href="/kategori/teknik-servis">Teknik Servis</Link>
-        </nav>
-
         {sections.map((section) => <HomeSlider key={section.key} section={section.key} slides={slides.filter((slide) => slide.section === section.key)} title={section.title} motion={motion} />)}
       </main>
 
@@ -58,7 +62,7 @@ export default async function HomePage() {
         <div className="siteFooterInner">
           <div className="siteFooterBrand"><strong>{settings.site_name}</strong><span>{settings.site_tagline || "Teknoloji, ürün ve servis."}</span></div>
           <nav className="siteFooterLinks" aria-label="Alt menü">
-            <Link href="#telefonlar">Ürünler</Link><Link href="/takas">Takas</Link><Link href="/kategori/teknik-servis">Teknik Servis</Link>{digits ? <a href={`https://wa.me/${digits}`} rel="noreferrer" target="_blank">WhatsApp</a> : null}
+            <Link href="/kategori/telefon">Ürünler</Link><Link href="/takas">Takas</Link><Link href="/kategori/teknik-servis">Teknik Servis</Link>{digits ? <a href={`https://wa.me/${digits}`} rel="noreferrer" target="_blank">WhatsApp</a> : null}
           </nav>
         </div>
       </footer>
