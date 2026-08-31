@@ -23,7 +23,6 @@ export async function saveSiteSettings(input: {
 }) {
   const values = normalizeSiteSettings(input);
   const supabase = await requireAdmin();
-
   const { error } = await supabase.from("site_settings").update({
     site_name: values.siteName,
     site_tagline: values.siteTagline,
@@ -33,12 +32,32 @@ export async function saveSiteSettings(input: {
     brand_wordmark_url: values.brandWordmarkUrl,
     updated_at: new Date().toISOString(),
   }).eq("id", true);
-
-  if (error) throw new Error("Site ayarları kaydedilemedi.");
+  if (error) throw new Error("Şirket ayarları kaydedilemedi.");
   revalidatePath("/");
+  revalidatePath("/manifest.webmanifest");
   revalidatePath("/kategori/[slug]", "page");
   revalidatePath("/ilan/[productCode]", "page");
-  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/company");
+}
+
+export async function saveSiteIdentitySettings(input: { metaTitle: string; metaDescription: string; pwaName: string }) {
+  const metaTitle = input.metaTitle.trim();
+  const metaDescription = input.metaDescription.trim();
+  const pwaName = input.pwaName.trim();
+  if (metaTitle.length < 2 || metaTitle.length > 80) throw new Error("Sekme başlığı 2-80 karakter olmalıdır.");
+  if (metaDescription.length < 10 || metaDescription.length > 180) throw new Error("Site açıklaması 10-180 karakter olmalıdır.");
+  if (pwaName.length < 2 || pwaName.length > 40) throw new Error("Uygulama adı 2-40 karakter olmalıdır.");
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("site_settings").update({
+    site_meta_title: metaTitle,
+    site_meta_description: metaDescription,
+    pwa_name: pwaName,
+    updated_at: new Date().toISOString(),
+  }).eq("id", true);
+  if (error) throw new Error("Site ayarları kaydedilemedi.");
+  revalidatePath("/");
+  revalidatePath("/manifest.webmanifest");
+  revalidatePath("/admin/settings/site");
 }
 
 export async function saveHomepageExperienceSettings(input: {
@@ -57,7 +76,6 @@ export async function saveHomepageExperienceSettings(input: {
   const interval = Math.min(15, Math.max(2, Math.round(input.sliderIntervalSeconds || 3)));
   if (!["slide", "fade", "zoom"].includes(input.sliderTransition)) throw new Error("Geçersiz slider efekti.");
   if (!["rise", "fade", "zoom", "none"].includes(input.sliderRevealEffect)) throw new Error("Geçersiz giriş efekti.");
-
   const supabase = await requireAdmin();
   const { error } = await supabase.from("site_settings").update({
     announcement_enabled: input.announcementEnabled,
@@ -71,7 +89,7 @@ export async function saveHomepageExperienceSettings(input: {
     slider_pause_on_hover: input.sliderPauseOnHover,
     updated_at: new Date().toISOString(),
   }).eq("id", true);
-  if (error) throw new Error("Ana sayfa hareket ayarları kaydedilemedi.");
+  if (error) throw new Error("Ana sayfa ayarları kaydedilemedi.");
   revalidatePath("/");
-  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/homepage");
 }
