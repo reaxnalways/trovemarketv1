@@ -18,13 +18,8 @@ export default async function ProductLabelPage({ params }: Props) {
   if (!product) notFound();
 
   const productName = [product.brand, product.model].filter(Boolean).join(" ") || product.title;
-  const registrationCode = product.device_region === "tr" ? "TC" : product.device_region === "passport" ? "PK" : product.device_region === "international" ? "YD" : null;
-  const details = [
-    product.storage || null,
-    product.battery_health == null ? null : `PİL %${product.battery_health}`,
-    product.color?.toLocaleUpperCase("tr-TR") || null,
-    registrationCode,
-  ].filter(Boolean);
+  const registrationCode = product.device_region === "tr" ? "TC" : product.device_region === "passport" ? "PK" : product.device_region === "international" ? "YD" : "-";
+  const battery = product.battery_health == null ? "-" : `%${product.battery_health}`;
 
   return (
     <main className="adminShell adminLabelPage">
@@ -38,16 +33,21 @@ export default async function ProductLabelPage({ params }: Props) {
 
       <section className="adminDashboardCard adminLabelControls adminPrintOnlyHidden">
         <strong>Standart Trove etiketi</strong>
-        <p>Etikette pil sağlığı ve cihaz kayıt kodu gösterilir: Türkiye cihazı = TC, pasaport kayıtlı = PK, yurt dışı = YD.</p>
+        <p>TROVE üstte; model, hafıza, pil, renk ve TC/PK/YD bilgileri sade ve büyük gösterilir.</p>
       </section>
 
       <div className="adminLabelPreview">
         <article className="troveThermalLabel troveThermalLabel50x30">
+          <div className="troveLabelLogo" aria-label="TROVE"><span>TR</span><span className="trovePowerO">O</span><span>VE</span></div>
           <div className="troveLabelTitle">{productName}</div>
-          <div className="troveLabelDetails">{details.length ? details.join(" • ") : "ÖZELLİK BİLGİSİ YOK"}</div>
+          <div className="troveLabelSpecs">
+            <div><strong>{product.storage || "-"}</strong><small>HAFIZA</small></div>
+            <div><strong>PİL {battery}</strong><small>PİL YÜZDESİ</small></div>
+            <div><strong>{product.color?.toLocaleUpperCase("tr-TR") || "-"}</strong><small>RENK</small></div>
+            <div><strong>{registrationCode}</strong><small>KAYIT</small></div>
+          </div>
           <div className="troveBarcodeArea"><Code128Barcode value={product.product_code} height={70} /></div>
           <strong className="troveProductCode">{product.product_code}</strong>
-          <strong className="troveLabelBrandText">T R O V E</strong>
         </article>
       </div>
     </main>
