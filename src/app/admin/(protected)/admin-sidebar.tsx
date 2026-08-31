@@ -12,6 +12,13 @@ const navGroups = [
     ],
   },
   {
+    label: "Takas",
+    items: [
+      { label: "Satın alınabilir cihazlar", href: "/admin/trade-in" },
+      { label: "Takas formunu aç", href: "/takas", external: true },
+    ],
+  },
+  {
     label: "Servis",
     items: [
       { label: "Servis kayıtları", href: "/admin/technical-service#servis-kayitlari" },
