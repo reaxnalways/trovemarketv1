@@ -14,7 +14,8 @@ const navGroups = [
   {
     label: "Takas",
     items: [
-      { label: "Satın alınabilir cihazlar", href: "/admin/trade-in" },
+      { label: "Cihaz fiyatları", href: "/admin/trade-in" },
+      { label: "Masraf referansları", href: "/admin/trade-in/costs" },
       { label: "Takas formunu aç", href: "/takas", external: true },
     ],
   },
