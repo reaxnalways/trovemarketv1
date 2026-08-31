@@ -39,7 +39,14 @@ export default async function HomePage() {
 
       <main className="shell homeShowcase">
         <nav className="homePrimaryNav" aria-label="Ana işlemler">
-          <Link href="#telefonlar">Ürünler</Link>
+          <details className="homeProductsMenu">
+            <summary>Ürünler <span aria-hidden="true">⌄</span></summary>
+            <div className="homeProductsDropdown">
+              <Link href="/kategori/telefon">Telefonlar</Link>
+              <Link href="/kategori/laptop-bilgisayar">Laptop & Bilgisayar</Link>
+              <Link href="/kategori/bilgisayar-parcalari">Bilgisayar Parçaları</Link>
+            </div>
+          </details>
           <Link href="/takas">Takas</Link>
           <Link href="/kategori/teknik-servis">Teknik Servis</Link>
         </nav>
