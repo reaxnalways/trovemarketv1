@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Trove Teknoloji">
+  <rect width="512" height="512" rx="112" fill="#0b0d10"/>
+  <path d="M128 132h256v72h-88v176h-80V204h-88z" fill="#ffffff"/>
+  <path d="M128 132h256v24H128z" fill="#8b5cf6"/>
+</svg>
