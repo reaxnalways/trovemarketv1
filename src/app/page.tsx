@@ -16,18 +16,25 @@ const sections: { key: HomepageSlideSection; title: string }[] = [
   { key: "accessories", title: "Aksesuarlar & Yedek Parçalar" },
 ];
 
-const tickerItems = ["Sıfır & ikinci el telefonlar", "Laptop & bilgisayar", "Bilgisayar parçaları", "Hızlı teknik servis", "WhatsApp iletişim"];
-
 export default async function HomePage() {
   const [slides, settings] = await Promise.all([listPublicHomepageSlides(), getPublicSiteSettings()]);
   const digits = settings.whatsapp_number?.replace(/\D/g, "") ?? "";
+  const motion = {
+    slider_autoplay: settings.slider_autoplay,
+    slider_interval_seconds: settings.slider_interval_seconds,
+    slider_transition: settings.slider_transition,
+    slider_reveal_effect: settings.slider_reveal_effect,
+    slider_pause_on_hover: settings.slider_pause_on_hover,
+  };
 
   return (
     <>
       <SiteHeader settings={settings} />
-      <div className="homeTicker" aria-label="Trove Teknoloji duyuruları">
-        <div className="homeTickerViewport"><div className="homeTickerTrack">{[0, 1].map((group) => <div className="homeTickerGroup" aria-hidden={group === 1} key={group}>{tickerItems.map((item) => <span className="homeTickerItem" key={`${group}-${item}`}>{item}</span>)}</div>)}</div></div>
-      </div>
+      {settings.announcement_enabled ? (
+        <div className={`homeTicker${settings.announcement_pause_on_hover ? "" : " homeTickerNoPause"}`} aria-label="Trove Teknoloji duyuruları" style={{ "--ticker-duration": `${settings.announcement_speed_seconds}s` } as React.CSSProperties}>
+          <div className="homeTickerViewport"><div className="homeTickerTrack">{[0, 1].map((group) => <div className="homeTickerGroup" aria-hidden={group === 1} key={group}>{settings.announcement_items.map((item) => <span className="homeTickerItem" key={`${group}-${item}`}>{item}</span>)}</div>)}</div></div>
+        </div>
+      ) : null}
 
       <main className="shell homeShowcase">
         <nav className="homePrimaryNav" aria-label="Ana işlemler">
@@ -36,7 +43,7 @@ export default async function HomePage() {
           <Link href="/kategori/teknik-servis">Teknik Servis</Link>
         </nav>
 
-        {sections.map((section) => <HomeSlider key={section.key} section={section.key} slides={slides.filter((slide) => slide.section === section.key)} title={section.title} />)}
+        {sections.map((section) => <HomeSlider key={section.key} section={section.key} slides={slides.filter((slide) => slide.section === section.key)} title={section.title} motion={motion} />)}
       </main>
 
       <footer className="siteFooter">
