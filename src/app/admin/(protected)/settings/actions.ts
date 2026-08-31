@@ -36,7 +36,7 @@ export async function saveSiteSettings(input: {
     updated_at: new Date().toISOString(),
   }).eq("id", true);
   if (error) throw new Error("Şirket ayarları kaydedilemedi.");
-  revalidatePath("/"); revalidatePath("/hakkimizda"); revalidatePath("/manifest.webmanifest"); revalidatePath("/kategori/[slug]", "page"); revalidatePath("/ilan/[productCode]", "page"); revalidatePath("/admin/settings/company");
+  revalidatePath("/"); revalidatePath("/hakkimizda"); revalidatePath("/manifest.webmanifest"); revalidatePath("/api/app-icon"); revalidatePath("/kategori/[slug]", "page"); revalidatePath("/ilan/[productCode]", "page"); revalidatePath("/admin/settings/company");
 }
 
 export async function saveSiteIdentitySettings(input: { metaTitle: string; metaDescription: string; pwaName: string }) {
