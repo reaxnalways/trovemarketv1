@@ -1,18 +1,27 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { HomepageSlide, HomepageSlideSection } from "../modules/homepage/slides";
+import type { PublicSiteSettings } from "../modules/settings/public-settings";
 
-export function HomeSlider({ section, title, slides }: { section: HomepageSlideSection; title: string; slides: HomepageSlide[] }) {
+type Props = {
+  section: HomepageSlideSection;
+  title: string;
+  slides: HomepageSlide[];
+  motion: Pick<PublicSiteSettings, "slider_autoplay" | "slider_interval_seconds" | "slider_transition" | "slider_reveal_effect" | "slider_pause_on_hover">;
+};
+
+export function HomeSlider({ section, title, slides, motion }: Props) {
   const sectionRef = useRef<HTMLElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
   const id = section === "phones" ? "telefonlar" : section;
   const displaySlides: Array<HomepageSlide | null> = slides.length ? slides : [null, null, null];
 
   useEffect(() => {
     const node = sectionRef.current;
     if (!node) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (motion.slider_reveal_effect === "none" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       node.classList.add("isVisible");
       return;
     }
@@ -24,23 +33,31 @@ export function HomeSlider({ section, title, slides }: { section: HomepageSlideS
     }, { threshold: 0.16 });
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [motion.slider_reveal_effect]);
 
   useEffect(() => {
     const rail = railRef.current;
-    if (!rail || slides.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!rail || !motion.slider_autoplay || paused || slides.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let index = 0;
     const timer = window.setInterval(() => {
       const cards = Array.from(rail.querySelectorAll<HTMLElement>(".homeSlideCard"));
       if (!cards.length) return;
       index = (index + 1) % cards.length;
+      rail.dataset.transitioning = "true";
       cards[index]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
-    }, 3000);
+      window.setTimeout(() => { if (rail) delete rail.dataset.transitioning; }, 520);
+    }, motion.slider_interval_seconds * 1000);
     return () => window.clearInterval(timer);
-  }, [slides.length]);
+  }, [motion.slider_autoplay, motion.slider_interval_seconds, paused, slides.length]);
 
   return (
-    <section ref={sectionRef} className={`homeSliderSection homeReveal homeSliderSection${section === "campaigns" ? "Campaigns" : ""}`} id={id}>
+    <section
+      ref={sectionRef}
+      className={`homeSliderSection homeReveal reveal-${motion.slider_reveal_effect} transition-${motion.slider_transition} homeSliderSection${section === "campaigns" ? "Campaigns" : ""}`}
+      id={id}
+      onMouseEnter={() => motion.slider_pause_on_hover && setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <div className="homeSliderHeader"><h2>{title}</h2></div>
       <div ref={railRef} className="homeSliderRail">
         {displaySlides.map((slide, index) => {
