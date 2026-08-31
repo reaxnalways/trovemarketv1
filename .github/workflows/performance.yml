@@ -1,0 +1,38 @@
+name: Performance Audit
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-main
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: Lighthouse public pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Audit homepage
+        run: npx --yes lighthouse@12.8.2 https://trovemarketv1.remziemiraltunbas.workers.dev --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=/tmp/home.json --quiet
+      - name: Audit phone catalog
+        run: npx --yes lighthouse@12.8.2 https://trovemarketv1.remziemiraltunbas.workers.dev/kategori/telefon --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=/tmp/catalog.json --quiet
+      - name: Audit trade-in
+        run: npx --yes lighthouse@12.8.2 https://trovemarketv1.remziemiraltunbas.workers.dev/takas --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=/tmp/trade.json --quiet
+      - name: Print scores
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          for (const [name, path] of [['home','/tmp/home.json'],['catalog','/tmp/catalog.json'],['trade','/tmp/trade.json']]) {
+            const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const c = report.categories;
+            const score = key => Math.round((c[key]?.score ?? 0) * 100);
+            console.log(`${name}: performance=${score('performance')} accessibility=${score('accessibility')} best-practices=${score('best-practices')} seo=${score('seo')}`);
+          }
+          NODE
