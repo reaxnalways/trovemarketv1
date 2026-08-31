@@ -5,6 +5,7 @@ import { getPublicListingByProductCode } from "../../modules/listings/repository
 import { listPublicTradeInCostOptions, listPublicTradeInDevices } from "../../modules/trade-in/catalog";
 import { TradeInForm } from "./trade-in-form";
 import "./trade-in.css";
+import "./trade-target.css";
 
 export const dynamic="force-dynamic";
 
