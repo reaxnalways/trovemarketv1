@@ -5,14 +5,22 @@ import "./about.css";
 
 export const dynamic = "force-dynamic";
 
+function parseAbout(text: string) {
+  const normalized = text.replace(/\\n/g, "\n").trim();
+  const markers = ["VİZYONUMUZ", "MİSYONUMUZ", "DEĞERLERİMİZ"];
+  const positions = markers.map((marker) => normalized.indexOf(marker));
+  if (positions.some((position) => position < 0)) return { intro: normalized, vision: "", mission: "", values: "" };
+  return {
+    intro: normalized.slice(0, positions[0]).trim(),
+    vision: normalized.slice(positions[0] + markers[0].length, positions[1]).trim(),
+    mission: normalized.slice(positions[1] + markers[1].length, positions[2]).trim(),
+    values: normalized.slice(positions[2] + markers[2].length).trim(),
+  };
+}
+
 export default async function AboutPage() {
   const settings = await getPublicSiteSettings();
-  const whatsappDigits = settings.whatsapp_number?.replace(/\D/g, "") ?? "";
-  const telHref = settings.contact_phone?.replace(/[^+\d]/g, "") ?? "";
-  const address = settings.company_address?.trim() ?? "";
-  const encodedAddress = encodeURIComponent(address);
-  const mapUrl = address ? `https://www.google.com/maps?q=${encodedAddress}&output=embed` : "";
-  const directionsUrl = address ? `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}` : "";
+  const about = parseAbout(settings.about_text || settings.site_tagline || "Teknoloji ürünleri, teknik servis ve hızlı iletişim için yanınızdayız.");
 
   return <>
     <SiteHeader settings={settings} />
@@ -21,25 +29,18 @@ export default async function AboutPage() {
       <section className="aboutHero">
         <span>Hakkımızda</span>
         <h1>{settings.site_name}</h1>
-        <p>{settings.about_text || settings.site_tagline || "Teknoloji ürünleri, teknik servis ve hızlı iletişim için yanınızdayız."}</p>
+        <p>{about.intro}</p>
       </section>
 
-      <section className="aboutContactSection">
-        <div className="aboutSectionHeading"><h2>İletişim</h2><p>Bize size uygun kanaldan ulaşabilirsiniz.</p></div>
-        <div className="aboutContactGrid">
-          {settings.contact_phone ? <a className="aboutContactCard" href={`tel:${telHref}`}><span>Telefon</span><strong>{settings.contact_phone}</strong></a> : null}
-          {whatsappDigits ? <a className="aboutContactCard" href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer"><span>WhatsApp</span><strong>Mesaj gönder</strong></a> : null}
-          {settings.contact_email ? <a className="aboutContactCard" href={`mailto:${settings.contact_email}`}><span>E-posta</span><strong>{settings.contact_email}</strong></a> : null}
-          {settings.instagram_url ? <a className="aboutContactCard" href={settings.instagram_url} target="_blank" rel="noreferrer"><span>Instagram</span><strong>Profili aç</strong></a> : null}
-        </div>
+      <section className="aboutStoryGrid">
+        {about.vision ? <article className="aboutStoryCard"><span>01</span><h2>Vizyonumuz</h2><p>{about.vision}</p></article> : null}
+        {about.mission ? <article className="aboutStoryCard"><span>02</span><h2>Misyonumuz</h2><p>{about.mission}</p></article> : null}
+        {about.values ? <article className="aboutStoryCard aboutStoryCardWide"><span>03</span><h2>Değerlerimiz</h2><p>{about.values}</p></article> : null}
       </section>
 
-      <section className="aboutLocationSection">
-        <div className="aboutSectionHeading"><h2>Mağaza Konumu</h2>{address ? <p>{address}</p> : <p>İş yeri adresi henüz eklenmedi.</p>}</div>
-        {address ? <div className="aboutMapCard">
-          <iframe title={`${settings.site_name} konumu`} src={mapUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
-          <a className="aboutDirectionsButton" href={directionsUrl} target="_blank" rel="noreferrer">Yol Tarifi Al</a>
-        </div> : null}
+      <section className="aboutContactSection aboutContactCta">
+        <div className="aboutSectionHeading"><span>İletişim</span><h2>Trove Teknoloji ile iletişime geçin</h2><p>Ürün, takas veya teknik servis hakkında bize ulaşmak için tüm iletişim bilgilerini tek sayfada bulabilirsiniz.</p></div>
+        <Link className="aboutDirectionsButton" href="/iletisim">İletişim Bilgilerini Aç →</Link>
       </section>
     </main>
   </>;
