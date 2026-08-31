@@ -73,3 +73,5 @@ jobs:
           echo '```text' >> "$GITHUB_STEP_SUMMARY"
           tail -n 120 cloudflare-deploy.log 2>/dev/null >> "$GITHUB_STEP_SUMMARY" || true
           echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+# Updated to trigger the Cloudflare deployment for the latest main revision.
