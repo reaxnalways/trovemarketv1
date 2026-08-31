@@ -15,6 +15,7 @@ async function requireAdmin() {
 
 export async function saveSiteSettings(input: {
   siteName: string; siteTagline: string; whatsappNumber: string; whatsappDefaultMessage: string;
+  contactEmail: string; contactPhone: string; instagramUrl: string; companyAddress: string; aboutText: string;
   logoUrl: string | null; brandWordmarkUrl: string | null; appIconUrl: string | null;
 }) {
   const values = normalizeSiteSettings(input);
@@ -24,13 +25,18 @@ export async function saveSiteSettings(input: {
     site_tagline: values.siteTagline,
     whatsapp_number: values.whatsappNumber || null,
     whatsapp_default_message: values.whatsappDefaultMessage,
+    contact_email: values.contactEmail || null,
+    contact_phone: values.contactPhone || null,
+    instagram_url: values.instagramUrl || null,
+    company_address: values.companyAddress || null,
+    about_text: values.aboutText || null,
     logo_url: values.logoUrl,
     brand_wordmark_url: values.brandWordmarkUrl,
     app_icon_url: values.appIconUrl,
     updated_at: new Date().toISOString(),
   }).eq("id", true);
   if (error) throw new Error("Şirket ayarları kaydedilemedi.");
-  revalidatePath("/"); revalidatePath("/manifest.webmanifest"); revalidatePath("/kategori/[slug]", "page"); revalidatePath("/ilan/[productCode]", "page"); revalidatePath("/admin/settings/company");
+  revalidatePath("/"); revalidatePath("/hakkimizda"); revalidatePath("/manifest.webmanifest"); revalidatePath("/kategori/[slug]", "page"); revalidatePath("/ilan/[productCode]", "page"); revalidatePath("/admin/settings/company");
 }
 
 export async function saveSiteIdentitySettings(input: { metaTitle: string; metaDescription: string; pwaName: string }) {
