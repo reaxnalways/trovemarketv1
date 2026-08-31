@@ -16,7 +16,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     theme_color: "#080a0f",
     icons: [
       { src: "/api/app-icon?size=192", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/api/app-icon?size=512", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+      { src: "/api/app-icon?size=512", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }
