@@ -5,6 +5,7 @@ export type SiteSettingsInput = {
   whatsappDefaultMessage: string;
   logoUrl: string | null;
   brandWordmarkUrl: string | null;
+  appIconUrl: string | null;
 };
 
 export function normalizeSiteSettings(input: SiteSettingsInput) {
@@ -14,19 +15,15 @@ export function normalizeSiteSettings(input: SiteSettingsInput) {
   const whatsappNumber = input.whatsappNumber.replace(/[^0-9]/g, "");
   const logoUrl = input.logoUrl?.trim() || null;
   const brandWordmarkUrl = input.brandWordmarkUrl?.trim() || null;
+  const appIconUrl = input.appIconUrl?.trim() || null;
 
   if (siteName.length < 2 || siteName.length > 80) throw new Error("Site adı 2-80 karakter olmalıdır.");
   if (siteTagline.length > 180) throw new Error("Site açıklaması en fazla 180 karakter olabilir.");
-  if (whatsappNumber && (whatsappNumber.length < 10 || whatsappNumber.length > 15)) {
-    throw new Error("WhatsApp numarasını ülke koduyla birlikte gir.");
-  }
+  if (whatsappNumber && (whatsappNumber.length < 10 || whatsappNumber.length > 15)) throw new Error("WhatsApp numarasını ülke koduyla birlikte gir.");
   if (whatsappDefaultMessage.length > 500) throw new Error("WhatsApp mesajı en fazla 500 karakter olabilir.");
-  if (logoUrl && !logoUrl.includes("/storage/v1/object/public/brand-assets/")) {
-    throw new Error("Logo yalnızca Trove marka deposundan seçilebilir.");
-  }
-  if (brandWordmarkUrl && !brandWordmarkUrl.includes("/storage/v1/object/public/brand-assets/")) {
-    throw new Error("Marka yazısı yalnızca Trove marka deposundan seçilebilir.");
-  }
+  if (logoUrl && !logoUrl.includes("/storage/v1/object/public/brand-assets/")) throw new Error("Logo yalnızca Trove marka deposundan seçilebilir.");
+  if (brandWordmarkUrl && !brandWordmarkUrl.includes("/storage/v1/object/public/brand-assets/")) throw new Error("Marka yazısı yalnızca Trove marka deposundan seçilebilir.");
+  if (appIconUrl && !appIconUrl.includes("/storage/v1/object/public/brand-assets/")) throw new Error("Uygulama ikonu yalnızca Trove marka deposundan seçilebilir.");
 
-  return { siteName, siteTagline, whatsappNumber, whatsappDefaultMessage, logoUrl, brandWordmarkUrl };
+  return { siteName, siteTagline, whatsappNumber, whatsappDefaultMessage, logoUrl, brandWordmarkUrl, appIconUrl };
 }
