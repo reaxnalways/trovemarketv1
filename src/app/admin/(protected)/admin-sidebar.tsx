@@ -23,7 +23,7 @@ const navGroups = [
   {
     label: "Site",
     items: [
-      { label: "Kampanya & içerik", href: "/admin/content" },
+      { label: "Ana sayfa sliderları", href: "/admin/content" },
       { label: "Site ayarları", href: "/admin/settings" },
       { label: "Ana sayfayı aç", href: "/", external: true },
     ],
