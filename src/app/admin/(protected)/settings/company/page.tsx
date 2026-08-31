@@ -6,10 +6,10 @@ import { SettingsForm } from "../settings-form";
 
 export default async function CompanySettingsPage() {
   const supabase = await createSupabaseServerClient();
-  const { data } = await supabase.from("site_settings").select("site_name,site_tagline,whatsapp_number,whatsapp_default_message,logo_url,brand_wordmark_url,app_icon_url").eq("id", true).maybeSingle();
+  const { data } = await supabase.from("site_settings").select("site_name,site_tagline,whatsapp_number,whatsapp_default_message,logo_url,brand_wordmark_url,app_icon_url,contact_email,contact_phone,instagram_url,company_address,about_text").eq("id", true).maybeSingle();
   const { url, publishableKey } = getPublicSupabaseConfig();
   return <main className="adminShell">
-    <header className="adminTopbar"><div><h1 className="adminPageTitle">Şirket Ayarları</h1><p className="adminLead">Marka, logo, mobil uygulama simgesi ve iletişim bilgileri.</p></div><Link className="adminTextLink" href="/admin/settings">Ayarlar</Link></header>
-    <section className="adminDashboardCard"><SettingsForm supabasePublishableKey={publishableKey} supabaseUrl={url} initial={{siteName:data?.site_name??FALLBACK_SITE_SETTINGS.site_name,siteTagline:data?.site_tagline??FALLBACK_SITE_SETTINGS.site_tagline,whatsappNumber:data?.whatsapp_number??"",whatsappDefaultMessage:data?.whatsapp_default_message??FALLBACK_SITE_SETTINGS.whatsapp_default_message,logoUrl:data?.logo_url??null,brandWordmarkUrl:data?.brand_wordmark_url??null,appIconUrl:data?.app_icon_url??null}} /></section>
+    <header className="adminTopbar"><div><h1 className="adminPageTitle">Şirket Ayarları</h1><p className="adminLead">Marka, iletişim, sosyal medya ve mağaza adresi.</p></div><Link className="adminTextLink" href="/admin/settings">Ayarlar</Link></header>
+    <section className="adminDashboardCard"><SettingsForm supabasePublishableKey={publishableKey} supabaseUrl={url} initial={{siteName:data?.site_name??FALLBACK_SITE_SETTINGS.site_name,siteTagline:data?.site_tagline??FALLBACK_SITE_SETTINGS.site_tagline,whatsappNumber:data?.whatsapp_number??"",whatsappDefaultMessage:data?.whatsapp_default_message??FALLBACK_SITE_SETTINGS.whatsapp_default_message,contactEmail:data?.contact_email??"",contactPhone:data?.contact_phone??"",instagramUrl:data?.instagram_url??"",companyAddress:data?.company_address??"",aboutText:data?.about_text??"",logoUrl:data?.logo_url??null,brandWordmarkUrl:data?.brand_wordmark_url??null,appIconUrl:data?.app_icon_url??null}} /></section>
   </main>;
 }
