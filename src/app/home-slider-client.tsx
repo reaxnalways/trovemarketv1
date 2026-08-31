@@ -16,9 +16,11 @@ export function HomeSlider({ section, title, slides, motion }: Props) {
   const railRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(false);
   const id = section === "phones" ? "telefonlar" : section;
+  const isCampaigns = section === "campaigns";
   const displaySlides: Array<HomepageSlide | null> = slides.length ? slides : [null, null, null];
 
   useEffect(() => {
+    if (isCampaigns) return;
     const node = sectionRef.current;
     if (!node) return;
     if (motion.slider_reveal_effect === "none" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -30,10 +32,10 @@ export function HomeSlider({ section, title, slides, motion }: Props) {
         node.classList.add("isVisible");
         observer.disconnect();
       }
-    }, { threshold: 0.16 });
+    }, { threshold: 0.12 });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [motion.slider_reveal_effect]);
+  }, [isCampaigns, motion.slider_reveal_effect]);
 
   useEffect(() => {
     const rail = railRef.current;
@@ -43,18 +45,15 @@ export function HomeSlider({ section, title, slides, motion }: Props) {
     let index = 0;
     const timer = window.setInterval(() => {
       if (document.hidden) return;
-      const cards = Array.from(rail.querySelectorAll<HTMLElement>(".homeSlideCard"));
+      const cards = rail.querySelectorAll<HTMLElement>(".homeSlideCard");
       if (!cards.length) return;
-
       index = (index + 1) % cards.length;
       const card = cards[index];
       if (!card) return;
-
-      const effect = (slides[index]?.transition_effect || motion.slider_transition) as HomepageSlideTransition;
-      sectionNode.dataset.transitionEffect = effect;
+      sectionNode.dataset.transitionEffect = (slides[index]?.transition_effect || motion.slider_transition) as HomepageSlideTransition;
       rail.dataset.transitioning = "true";
       rail.scrollTo({ left: card.offsetLeft - rail.offsetLeft, behavior: "smooth" });
-      window.setTimeout(() => { if (rail) delete rail.dataset.transitioning; }, 520);
+      window.setTimeout(() => delete rail.dataset.transitioning, 520);
     }, motion.slider_interval_seconds * 1000);
 
     return () => window.clearInterval(timer);
@@ -63,7 +62,7 @@ export function HomeSlider({ section, title, slides, motion }: Props) {
   return (
     <section
       ref={sectionRef}
-      className={`homeSliderSection homeReveal reveal-${motion.slider_reveal_effect} homeSliderSection${section === "campaigns" ? "Campaigns" : ""}`}
+      className={`homeSliderSection homeReveal reveal-${motion.slider_reveal_effect}${isCampaigns ? " homeSliderSectionCampaigns isVisible" : ""}`}
       data-transition-effect={motion.slider_transition}
       id={id}
       onMouseEnter={() => motion.slider_pause_on_hover && setPaused(true)}
@@ -73,7 +72,8 @@ export function HomeSlider({ section, title, slides, motion }: Props) {
       <div ref={railRef} className="homeSliderRail">
         {displaySlides.map((slide, index) => {
           if (!slide) return <div className="homeSlideCard" key={`placeholder-${section}-${index}`}><div className="homeSlidePlaceholder"><div><strong>{title}</strong><span>Görsel admin panelinden eklenecek</span></div></div></div>;
-          const content = <><img alt={slide.title || title} src={slide.image_url} />{slide.title || slide.subtitle ? <div className="homeSlideOverlay">{slide.title ? <strong>{slide.title}</strong> : null}{slide.subtitle ? <span>{slide.subtitle}</span> : null}</div> : null}</>;
+          const prioritize = isCampaigns && index === 0;
+          const content = <><img alt={slide.title || title} src={slide.image_url} loading={prioritize ? "eager" : "lazy"} fetchPriority={prioritize ? "high" : "auto"} decoding="async" />{slide.title || slide.subtitle ? <div className="homeSlideOverlay">{slide.title ? <strong>{slide.title}</strong> : null}{slide.subtitle ? <span>{slide.subtitle}</span> : null}</div> : null}</>;
           return slide.link_url ? <a className="homeSlideCard" href={slide.link_url} key={slide.id}>{content}</a> : <div className="homeSlideCard" key={slide.id}>{content}</div>;
         })}
       </div>
