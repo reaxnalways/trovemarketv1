@@ -1,28 +1,28 @@
 export type SiteSettingsInput = {
   siteName: string;
-  siteTagline: string;
-  whatsappNumber: string;
-  whatsappDefaultMessage: string;
-  contactEmail: string;
-  contactPhone: string;
-  instagramUrl: string;
-  companyAddress: string;
-  aboutText: string;
-  logoUrl: string | null;
-  brandWordmarkUrl: string | null;
-  appIconUrl: string | null;
+  siteTagline?: string;
+  whatsappNumber?: string;
+  whatsappDefaultMessage?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  instagramUrl?: string;
+  companyAddress?: string;
+  aboutText?: string;
+  logoUrl?: string | null;
+  brandWordmarkUrl?: string | null;
+  appIconUrl?: string | null;
 };
 
 export function normalizeSiteSettings(input: SiteSettingsInput) {
   const siteName = input.siteName.trim();
-  const siteTagline = input.siteTagline.trim();
-  const whatsappDefaultMessage = input.whatsappDefaultMessage.trim();
-  const whatsappNumber = input.whatsappNumber.replace(/[^0-9]/g, "");
-  const contactEmail = input.contactEmail.trim();
-  const contactPhone = input.contactPhone.trim();
-  const instagramUrl = input.instagramUrl.trim();
-  const companyAddress = input.companyAddress.trim();
-  const aboutText = input.aboutText.trim();
+  const siteTagline = input.siteTagline?.trim() ?? "";
+  const whatsappDefaultMessage = input.whatsappDefaultMessage?.trim() ?? "";
+  const whatsappNumber = (input.whatsappNumber ?? "").replace(/[^0-9]/g, "");
+  const contactEmail = input.contactEmail?.trim() ?? "";
+  const contactPhone = input.contactPhone?.trim() ?? "";
+  const instagramUrl = input.instagramUrl?.trim() ?? "";
+  const companyAddress = input.companyAddress?.trim() ?? "";
+  const aboutText = input.aboutText?.trim() ?? "";
   const logoUrl = input.logoUrl?.trim() || null;
   const brandWordmarkUrl = input.brandWordmarkUrl?.trim() || null;
   const appIconUrl = input.appIconUrl?.trim() || null;
