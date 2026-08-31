@@ -2,13 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "../../../components/site-header";
 import { getPublicCategoryBySlug } from "../../../modules/categories/repository";
-import { formatListingPrice } from "../../../modules/listings/public-listings";
 import { listListingsByCategory } from "../../../modules/listings/repository";
 import { getPublicSiteSettings } from "../../../modules/settings/public-settings";
 import { CategoryListingsClient } from "./category-listings-client";
 import { ServiceFormClient } from "./service-form-client";
 import "./category-listings.css";
 import "./service-form.css";
+
+const CATALOG_COPY: Record<string, { title: string; text: string }> = {
+  telefon: { title: "Telefonlar", text: "Marka ve modele göre filtrele, güncel cihazları incele." },
+  "laptop-bilgisayar": { title: "Laptop & Bilgisayar", text: "Marka ve modele göre filtrele, uygun bilgisayarı hızlıca bul." },
+  "giyilebilir-teknoloji": { title: "Giyilebilir Teknoloji", text: "Marka ve modele göre filtrele, saat ve giyilebilir teknoloji ürünlerini incele." },
+  "aksesuar-yedek-parca": { title: "Aksesuar & Yedek Parça", text: "Marka ve modele göre filtrele, uyumlu aksesuar ve parçaları incele." },
+  "bilgisayar-parcalari": { title: "Bilgisayar Parçaları", text: "Marka ve modele göre filtrele, ihtiyacın olan parçayı hızlıca bul." },
+};
 
 export default async function CategoryPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams?: Promise<{ form?: string }> }) {
   const { slug } = await params;
@@ -23,10 +30,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   }
 
   const listings = await listListingsByCategory(category.id);
+  const copy = CATALOG_COPY[category.slug] ?? { title: category.name, text: category.description ?? "Marka ve modele göre filtrele, yayınlanmış ürünleri incele." };
 
-  if (category.slug === "telefon") {
-    return <><SiteHeader settings={settings} /><main className="shell categoryCatalogPage"><Link className="backLink" href="/">← Ana sayfa</Link><section className="categoryCatalogHero"><h1>Telefonlar</h1><p>Marka ve modele göre filtrele, güncel cihazları incele.</p></section>{listings.length === 0 ? <div className="emptyState">Bu kategoride henüz yayınlanmış ürün yok.</div> : <CategoryListingsClient listings={listings} categorySlug={category.slug} />}</main></>;
-  }
-
-  return <><SiteHeader settings={settings} /><main className="shell categoryPageShell"><Link className="backLink" href="/">← Ana sayfaya dön</Link><section className="categoryHero"><p className="eyebrow">{settings.site_name.toUpperCase()} KATEGORİ</p><h1>{category.name}</h1><p className="heroText">{category.description ?? "Yayınlanmış ürünleri incele."}</p></section>{listings.length === 0 ? <div className="emptyState">Bu kategoride henüz yayınlanmış ilan yok.</div> : <div className="listingGrid categoryListingGrid">{listings.map((listing) => <Link className="listingCard listingCardLink" href={`/ilan/${listing.product_code}`} key={listing.id}><div className="listingMedia">{listing.images[0] ? <img alt={listing.title} className="listingImage" src={listing.images[0]} /> : <span>TROVE</span>}</div><div className="listingBody"><span className="productCode">{listing.product_code}</span><h2>{listing.title}</h2><p className="listingMeta">{[listing.brand, listing.model].filter(Boolean).join(" · ") || "Ürün detayları"}</p><strong>{formatListingPrice(listing.price)}</strong></div></Link>)}</div>}</main></>;
+  return <><SiteHeader settings={settings} /><main className="shell categoryCatalogPage"><Link className="backLink" href="/">← Ana sayfa</Link><section className="categoryCatalogHero"><h1>{copy.title}</h1><p>{copy.text}</p></section>{listings.length === 0 ? <div className="emptyState">Bu kategoride henüz yayınlanmış ürün yok.</div> : <CategoryListingsClient listings={listings} categorySlug={category.slug} />}</main></>;
 }
