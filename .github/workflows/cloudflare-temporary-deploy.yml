@@ -1,77 +1,17 @@
 name: Cloudflare Temporary Deploy
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/cloudflare-temporary-deploy.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: cloudflare-temporary-deploy
-  cancel-in-progress: true
-
 jobs:
-  deploy:
-    name: Deploy to Cloudflare Workers
+  info:
+    name: Temporary deploy disabled for automatic pushes
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-      TROVE_ADMIN_EMAILS: ${{ secrets.TROVE_ADMIN_EMAILS }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Verify Supabase deployment environment
-        shell: bash
+      - name: Explain deployment path
         run: |
-          missing=0
-          for key in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; do
-            if [ -z "${!key}" ]; then
-              echo "::error::$key GitHub Actions secret is missing."
-              missing=1
-            fi
-          done
-          if [ "$missing" -ne 0 ]; then
-            exit 1
-          fi
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Test
-        run: npm test
-
-      - name: Build Next.js
-        run: npm run build
-
-      - name: Deploy temporary Cloudflare Worker
-        shell: bash
-        run: |
-          set -o pipefail
-          npx --yes wrangler@latest deploy --temporary --yes 2>&1 | tee cloudflare-deploy.log
-
-      - name: Publish deployment details
-        if: always()
-        shell: bash
-        run: |
-          echo '## Cloudflare deployment output' >> "$GITHUB_STEP_SUMMARY"
-          echo '```text' >> "$GITHUB_STEP_SUMMARY"
-          tail -n 120 cloudflare-deploy.log 2>/dev/null >> "$GITHUB_STEP_SUMMARY" || true
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-
-# Updated to trigger the Cloudflare deployment for the latest main revision.
+          echo "Production Cloudflare deployment now runs from deploy-production.yml on every push to main."
+          echo "Use this workflow only as a manual placeholder if a separate preview flow is added later."
