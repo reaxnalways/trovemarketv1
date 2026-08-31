@@ -3,7 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { HomepageSlide, HomepageSlideSection } from "@/modules/homepage/slides";
+import type { HomepageSlide, HomepageSlideSection, HomepageSlideTransition } from "@/modules/homepage/slides";
 
 const SECTION_LABELS: Record<HomepageSlideSection, string> = {
   campaigns: "Kampanyalar",
@@ -11,6 +11,15 @@ const SECTION_LABELS: Record<HomepageSlideSection, string> = {
   computers: "Bilgisayarlar",
   wearables: "Giyilebilir Teknoloji",
   accessories: "Aksesuarlar & Yedek Parçalar",
+};
+
+const EFFECT_LABELS: Record<HomepageSlideTransition, string> = {
+  slide: "Yana Kaydır",
+  fade: "Soluk Geçiş",
+  zoom: "Yakınlaştır",
+  flip: "3D Çevir",
+  blur: "Bulanık Geçiş",
+  stack: "Kart Destesi",
 };
 
 const SECTION_GUIDES: Record<HomepageSlideSection, { size: string; ratio: number; link: string; note: string }> = {
@@ -48,6 +57,7 @@ export function HomepageSliderManager({ initialSlides, supabaseUrl, supabasePubl
     const form = new FormData(formElement);
     const linkUrl = String(form.get("linkUrl") || "").trim();
     if (!validLink(linkUrl)) return setMessage("Bağlantı /kategori/telefon gibi / ile veya https:// ile başlamalıdır.");
+    const transitionEffect = String(form.get("transitionEffect") || "").trim() as HomepageSlideTransition | "";
 
     setBusy(true); setMessage(null);
     try {
@@ -63,9 +73,10 @@ export function HomepageSliderManager({ initialSlides, supabaseUrl, supabasePubl
         link_url: linkUrl || null,
         image_url: publicData.publicUrl,
         sort_order: Number(form.get("sortOrder") || 0),
+        transition_effect: transitionEffect || null,
         is_active: true,
       };
-      const { data, error } = await supabase.from("homepage_slides").insert(payload).select("id,section,title,subtitle,image_url,link_url,sort_order,is_active").single();
+      const { data, error } = await supabase.from("homepage_slides").insert(payload).select("id,section,title,subtitle,image_url,link_url,sort_order,is_active,transition_effect").single();
       if (error) throw error;
       setSlides((current) => [...current, data as HomepageSlide].sort((a,b) => a.sort_order-b.sort_order));
       setFile(null); setFileHint(null); formElement.reset(); setSection("campaigns");
@@ -87,6 +98,19 @@ export function HomepageSliderManager({ initialSlides, supabaseUrl, supabasePubl
     setBusy(true);
     const { error } = await supabase.from("homepage_slides").update({ is_active: !slide.is_active }).eq("id", slide.id);
     if (error) setMessage(error.message); else { setSlides((current) => current.map((item) => item.id === slide.id ? { ...item, is_active: !item.is_active } : item)); router.refresh(); }
+    setBusy(false);
+  }
+
+  async function updateEffect(slide: HomepageSlide, value: string) {
+    const effect = value ? value as HomepageSlideTransition : null;
+    setBusy(true); setMessage(null);
+    const { error } = await supabase.from("homepage_slides").update({ transition_effect: effect }).eq("id", slide.id);
+    if (error) setMessage(error.message);
+    else {
+      setSlides((current) => current.map((item) => item.id === slide.id ? { ...item, transition_effect: effect } : item));
+      setMessage("Slider efekti güncellendi.");
+      router.refresh();
+    }
     setBusy(false);
   }
 
@@ -112,26 +136,25 @@ export function HomepageSliderManager({ initialSlides, supabaseUrl, supabasePubl
     <section className="adminDashboardCard" style={{marginBottom:18}}>
       <h2 style={{marginTop:0}}>Slider ekleme yönergesi</h2>
       <p className="adminLead"><strong>{SECTION_LABELS[section]}</strong> için önerilen görsel: <strong>{guide.size}</strong>. WEBP/AVIF tercih et; dosyayı mümkünse 1 MB altında tut. Başlık ve kısa metin isteğe bağlıdır.</p>
-      <div className="adminFlowSteps">
-        <span>1. Bölümü seç</span><span>2. Doğru oranda görsel yükle</span><span>3. Gerekirse bağlantı ekle</span>
-      </div>
-      <p className="adminLead" style={{marginBottom:0}}>{guide.note}<br />Örnek bağlantı: <code>{guide.link}</code>. Diğer geçerli örnekler: <code>/takas</code>, <code>/kategori/teknik-servis</code>, <code>/ilan/TEL-001</code> veya tam bir <code>https://...</code> adresi. Bağlantı boş bırakılırsa görsel tıklanmaz.</p>
+      <div className="adminFlowSteps"><span>1. Bölümü seç</span><span>2. Görseli yükle</span><span>3. Efekt ve bağlantıyı seç</span></div>
+      <p className="adminLead" style={{marginBottom:0}}>{guide.note}<br />Örnek bağlantı: <code>{guide.link}</code>. Efekt seçmezsen Ana Sayfa Ayarları'ndaki genel slider efekti kullanılır.</p>
     </section>
 
     <form className="adminDashboardCard adminListingForm" onSubmit={addSlide}>
       <label className="adminField">Bölüm<select value={section} onChange={(e)=>{setSection(e.target.value as HomepageSlideSection);setFileHint(null);}}>{Object.entries(SECTION_LABELS).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
-      <label className="adminField">Sıra<input name="sortOrder" type="number" defaultValue="0" /><small>0 ilk sıradır. 1, 2, 3 diye devam edebilirsin.</small></label>
-      <label className="adminField adminFieldWide">Görsel<input accept="image/jpeg,image/png,image/webp,image/avif" type="file" onChange={chooseFile} required /><small>Önerilen: {guide.size} · JPG/PNG/WEBP/AVIF · Maksimum 10 MB.</small>{fileHint ? <small>{fileHint}</small> : null}</label>
+      <label className="adminField">Sıra<input name="sortOrder" type="number" defaultValue="0" /><small>0 ilk sıradır.</small></label>
+      <label className="adminField adminFieldWide">Görsel<input accept="image/jpeg,image/png,image/webp,image/avif" type="file" onChange={chooseFile} required /><small>Önerilen: {guide.size} · Maksimum 10 MB.</small>{fileHint ? <small>{fileHint}</small> : null}</label>
       <label className="adminField">Başlık<input name="title" placeholder="İsteğe bağlı" /></label>
       <label className="adminField">Kısa metin<input name="subtitle" placeholder="İsteğe bağlı" /></label>
-      <label className="adminField adminFieldWide">Bağlantı (isteğe bağlı)<input name="linkUrl" placeholder={guide.link} /><small>Site içi bağlantılar / ile başlamalıdır. Örn: {guide.link}</small></label>
+      <label className="adminField">Bu görselin geçiş efekti<select name="transitionEffect" defaultValue=""><option value="">Genel ayarı kullan</option>{Object.entries(EFFECT_LABELS).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select><small>Bu seçim yalnızca bu slider görseline özeldir.</small></label>
+      <label className="adminField adminFieldWide">Bağlantı (isteğe bağlı)<input name="linkUrl" placeholder={guide.link} /><small>Örn: {guide.link}</small></label>
       <div className="adminFormActions adminFieldWide"><button className="adminButton" disabled={busy} type="submit">{busy ? "Yükleniyor..." : "Slider görseli ekle"}</button></div>
       {message ? <p className="adminLead adminFieldWide">{message}</p> : null}
     </form>
 
     {Object.entries(SECTION_LABELS).map(([key,label]) => {
       const sectionSlides = slides.filter((slide)=>slide.section===key);
-      return <section className="adminDashboardCard" key={key}><div className="sectionHeading"><h2>{label}</h2><span>{sectionSlides.length} görsel</span></div>{sectionSlides.length ? <div className="adminSliderGrid">{sectionSlides.map((slide)=><article className="adminSliderCard" key={slide.id}><img src={slide.image_url} alt={slide.title || label} /><div><strong>{slide.title || "Başlıksız"}</strong><small>Sıra: {slide.sort_order} · {slide.is_active ? "Aktif" : "Pasif"}{slide.link_url ? ` · ${slide.link_url}` : " · Bağlantı yok"}</small></div><div className="adminInlineActions"><button className="adminButton adminButtonSecondary" disabled={busy} onClick={()=>toggleSlide(slide)} type="button">{slide.is_active ? "Gizle" : "Göster"}</button><button className="adminButton adminDangerButton" disabled={busy} onClick={()=>removeSlide(slide)} type="button">Sil</button></div></article>)}</div> : <p className="emptyState">Henüz görsel eklenmedi. Ana sayfada yer tutucu gösteriliyor.</p>}</section>;
+      return <section className="adminDashboardCard" key={key}><div className="sectionHeading"><h2>{label}</h2><span>{sectionSlides.length} görsel</span></div>{sectionSlides.length ? <div className="adminSliderGrid">{sectionSlides.map((slide)=><article className="adminSliderCard" key={slide.id}><img src={slide.image_url} alt={slide.title || label} /><div><strong>{slide.title || "Başlıksız"}</strong><small>Sıra: {slide.sort_order} · {slide.is_active ? "Aktif" : "Pasif"}{slide.link_url ? ` · ${slide.link_url}` : " · Bağlantı yok"}</small><label className="adminField" style={{marginTop:10}}>Efekt<select disabled={busy} value={slide.transition_effect ?? ""} onChange={(e)=>updateEffect(slide,e.target.value)}><option value="">Genel ayarı kullan</option>{Object.entries(EFFECT_LABELS).map(([value,effectLabel])=><option value={value} key={value}>{effectLabel}</option>)}</select></label></div><div className="adminInlineActions"><button className="adminButton adminButtonSecondary" disabled={busy} onClick={()=>toggleSlide(slide)} type="button">{slide.is_active ? "Gizle" : "Göster"}</button><button className="adminButton adminDangerButton" disabled={busy} onClick={()=>removeSlide(slide)} type="button">Sil</button></div></article>)}</div> : <p className="emptyState">Henüz görsel eklenmedi.</p>}</section>;
     })}
   </div>;
 }
