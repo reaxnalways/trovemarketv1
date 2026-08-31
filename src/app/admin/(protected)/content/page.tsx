@@ -1,10 +1,29 @@
 import Link from "next/link";
+import { getPublicSupabaseConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
-import { saveContent } from "./actions";
+import type { HomepageSlide } from "@/modules/homepage/slides";
+import { HomepageSliderManager } from "./homepage-slider-manager";
 
-type Props={searchParams:Promise<{saved?:string;error?:string}>};
-export default async function ContentPage({searchParams}:Props){
- const {saved,error}=await searchParams; const supabase=await createSupabaseServerClient();
- const {data}=await supabase.from("site_settings").select("campaign_title,campaign_text,campaign_url,service_intro").eq("id",true).maybeSingle();
- return <main className="adminShell"><div className="adminPageHeader"><div><p className="eyebrow">İÇERİK YÖNETİMİ</p><h1 className="adminPageTitle">Kampanya & Teknik Servis</h1></div><Link className="adminButton adminButtonSecondary" href="/admin">Panele dön</Link></div>{saved?<p className="adminSuccess">İçerikler kaydedildi.</p>:null}{error?<p className="adminError">{error}</p>:null}<section className="adminDashboardCard" style={{marginTop:24}}><form className="adminListingForm" action={saveContent}><label className="adminField adminFieldWide">Kampanya başlığı<input name="campaignTitle" defaultValue={data?.campaign_title??""}/></label><label className="adminField adminFieldWide">Kampanya açıklaması<textarea name="campaignText" defaultValue={data?.campaign_text??""}/></label><label className="adminField adminFieldWide">Kampanya bağlantısı<input name="campaignUrl" defaultValue={data?.campaign_url??""} placeholder="/kategori/telefon veya https://..."/></label><label className="adminField adminFieldWide">Teknik servis açıklaması<textarea name="serviceIntro" defaultValue={data?.service_intro??""}/></label><div className="adminFormActions adminFieldWide"><button className="adminButton" type="submit">İçerikleri kaydet</button></div></form></section></main>;
+export default async function ContentPage() {
+  const supabase = await createSupabaseServerClient();
+  const { url, publishableKey } = getPublicSupabaseConfig();
+  const { data } = await supabase
+    .from("homepage_slides")
+    .select("id,section,title,subtitle,image_url,link_url,sort_order,is_active")
+    .order("section")
+    .order("sort_order", { ascending: true });
+
+  return (
+    <main className="adminShell adminShellWide">
+      <div className="adminPageHeader">
+        <div><h1 className="adminPageTitle">Ana Sayfa Sliderları</h1></div>
+        <div className="adminTopbarActions"><Link className="adminButton adminButtonSecondary" href="/" target="_blank">Ana sayfayı aç</Link></div>
+      </div>
+      <HomepageSliderManager
+        initialSlides={(data ?? []) as HomepageSlide[]}
+        supabasePublishableKey={publishableKey}
+        supabaseUrl={url}
+      />
+    </main>
+  );
 }
