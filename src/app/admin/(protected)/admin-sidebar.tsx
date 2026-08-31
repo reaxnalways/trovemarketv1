@@ -19,6 +19,7 @@ export async function AdminSidebar() {
     <nav className="adminSidebarNav" aria-label="Admin menüsü">
       <Link className="adminSidebarHome" href="/admin"><span>Genel Bakış</span><small>⌂</small></Link>
       {navGroups.map(group=><details className="adminSidebarGroup" key={group.label}><summary>{group.label}<span aria-hidden="true">⌄</span></summary><div className="adminSidebarGroupItems">{group.items.map(item=><Link className="adminSidebarItem" href={item.href} key={item.label}>{item.label}<span aria-hidden="true">›</span></Link>)}</div></details>)}
+      <Link className="adminSidebarGuide" href="/admin/guide"><span>Kullanım Rehberi</span><small>A-Z</small></Link>
     </nav>
     <div className="adminSidebarFooter"><Link className="adminSidebarSiteButton" href="/" target="_blank">Müşteri sitesini aç ↗</Link><form action={logoutAdmin} className="adminSidebarLogout"><button type="submit">Çıkış</button></form></div>
   </aside>;
