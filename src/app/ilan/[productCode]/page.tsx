@@ -6,6 +6,7 @@ import { getPublicListingByProductCode } from "../../../modules/listings/reposit
 import { buildListingWhatsAppUrl } from "../../../modules/listings/whatsapp";
 import { getPublicSiteSettings } from "../../../modules/settings/public-settings";
 import { ListingGallery } from "./listing-gallery";
+import "./listing-detail.css";
 
 type ListingDetailPageProps = { params: Promise<{ productCode: string }> };
 const conditionLabels = { new: "Sıfır", used: "2. El", refurbished: "Yenilenmiş" } as const;
