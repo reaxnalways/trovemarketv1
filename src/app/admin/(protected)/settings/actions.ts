@@ -38,6 +38,8 @@ export async function saveSiteSettings(input: {
   if (error) throw new Error("Site ayarları kaydedilemedi.");
 
   revalidatePath("/");
+  revalidatePath("/manifest.webmanifest");
+  revalidatePath("/api/app-icon");
   revalidatePath("/kategori/[slug]", "page");
   revalidatePath("/ilan/[productCode]", "page");
   revalidatePath("/admin/settings");
