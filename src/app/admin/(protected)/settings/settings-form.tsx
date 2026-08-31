@@ -90,6 +90,10 @@ export function SettingsForm({ supabaseUrl, supabasePublishableKey, initial }: S
         validateSvg(logoFile, "Logo"); setStatus("Logo ve mobil uygulama simgesi hazırlanıyor...");
         nextLogoUrl = await uploadBrandAsset(logoFile, "logo");
         nextAppIconUrl = await uploadBrandAsset(await svgToPng(logoFile), "app-icon");
+      } else if (nextLogoUrl && !nextAppIconUrl) {
+        setStatus("Mevcut logodan mobil uygulama simgesi hazırlanıyor...");
+        const response = await fetch(nextLogoUrl); if (!response.ok) throw new Error("Mevcut logo okunamadı.");
+        nextAppIconUrl = await uploadBrandAsset(await svgToPng(await response.blob()), "app-icon");
       }
       if (brandWordmarkFile) {
         validateSvg(brandWordmarkFile, "Marka yazısı"); setStatus("Marka yazısı hazırlanıyor...");
