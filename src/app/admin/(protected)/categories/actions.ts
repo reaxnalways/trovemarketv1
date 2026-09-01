@@ -50,6 +50,7 @@ function parseValues(form: FormData) {
 function refreshCategoryPaths(slug?: string) {
   revalidatePath("/");
   revalidatePath("/admin/categories");
+  revalidatePath("/admin/content");
   revalidatePath("/admin/listings/new");
   revalidatePath("/admin/listings");
   if (slug) revalidatePath(`/kategori/${slug}`);
