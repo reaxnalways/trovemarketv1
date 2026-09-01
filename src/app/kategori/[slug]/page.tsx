@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "../../../components/site-header";
 import { getPublicCategoryBySlug } from "../../../modules/categories/repository";
 import { dictionary, getLocale } from "../../../modules/i18n";
+import { translateText } from "../../../modules/i18n/live-translation";
 import { listListingsByCategory } from "../../../modules/listings/repository";
 import { getPublicSiteSettings } from "../../../modules/settings/public-settings";
 import { listPublicServicePrices } from "../../../modules/technical-service/pricing";
@@ -37,12 +38,22 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const t = dictionary(locale);
 
   if (category.slug === "teknik-servis") {
-    const prices = await listPublicServicePrices();
+    const rawPrices = await listPublicServicePrices();
+    const prices = await Promise.all(rawPrices.map(async (price) => ({ ...price, fault_label: await translateText(price.fault_label, locale) })));
     const digits = settings.whatsapp_number?.replace(/\D/g, "") ?? "";
     return <><SiteHeader settings={settings} /><main className="shell tradePage serviceOfferPage"><Link className="backLink" href="/">← {t.home}</Link><header className="tradeIntro"><span className="tradeEyebrow">{t.serviceEyebrow}</span><h1>{t.serviceTitle}</h1><p>{t.serviceText}</p></header><ServiceOfferForm whatsappNumber={digits} prices={prices} locale={locale}/></main></>;
   }
 
-  const listings = await listListingsByCategory(category.id);
-  const copy = CATALOG_COPY[locale][category.slug as keyof typeof CATALOG_COPY.tr] ?? { title: category.name, text: category.description ?? t.browsePublished };
+  const rawListings = await listListingsByCategory(category.id);
+  const listings = await Promise.all(rawListings.map(async (listing) => ({
+    ...listing,
+    title: await translateText(listing.title, locale),
+    description: listing.description ? await translateText(listing.description, locale) : listing.description,
+  })));
+  const manualCopy = CATALOG_COPY[locale][category.slug as keyof typeof CATALOG_COPY.tr];
+  const copy = manualCopy ?? {
+    title: await translateText(category.name, locale),
+    text: category.description ? await translateText(category.description, locale) : t.browsePublished,
+  };
   return <><SiteHeader settings={settings} /><main className="shell categoryCatalogPage"><Link className="backLink" href="/">← {t.home}</Link><section className="categoryCatalogHero"><h1>{copy.title}</h1><p>{copy.text}</p></section>{listings.length === 0 ? <div className="emptyState">{t.emptyCategory}</div> : <CategoryListingsClient listings={listings} categorySlug={category.slug} locale={locale} />}</main></>;
 }
