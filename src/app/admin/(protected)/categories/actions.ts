@@ -35,13 +35,13 @@ function slugify(value: string) {
 function parseValues(form: FormData) {
   const name = text(form, "name");
   const slug = slugify(text(form, "slug") || name);
-  const codePrefix = text(form, "codePrefix").toUpperCase();
+  const codePrefix = text(form, "codePrefix").toLocaleUpperCase("tr-TR").replace(/İ/g, "I");
   const description = text(form, "description") || null;
   const sortOrder = Number(text(form, "sortOrder") || "0");
 
   if (name.length < 2 || name.length > 80) throw new Error("Kategori adı 2-80 karakter olmalı.");
   if (!slug) throw new Error("Geçerli bir kategori bağlantısı oluşturulamadı.");
-  if (!/^[A-Z]{3}$/.test(codePrefix)) throw new Error("Ürün kodu ön eki tam 3 büyük harf olmalı. Örn: TAB");
+  if (!/^[A-Z]{3}$/.test(codePrefix)) throw new Error("Ürün kodu ön eki tam 3 harf olmalı. Örnek: TAB, KON, KAM.");
   if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 9999) throw new Error("Sıralama 0-9999 arasında tam sayı olmalı.");
 
   return { name, slug, code_prefix: codePrefix, description, sort_order: sortOrder };
@@ -55,39 +55,59 @@ function refreshCategoryPaths(slug?: string) {
   if (slug) revalidatePath(`/kategori/${slug}`);
 }
 
+function categoryErrorUrl(message: string) {
+  return `/admin/categories?error=${encodeURIComponent(message)}`;
+}
+
 export async function createCategory(form: FormData) {
   const supabase = await adminClient();
-  const values = parseValues(form);
-  const { error } = await supabase.from("categories").insert({ ...values, is_active: true });
-  if (error) {
-    if (error.code === "23505") throw new Error("Bu kategori bağlantısı veya ürün kodu ön eki zaten kullanılıyor.");
-    throw new Error("Kategori eklenemedi.");
+  let values: ReturnType<typeof parseValues>;
+  try {
+    values = parseValues(form);
+  } catch (error) {
+    redirect(categoryErrorUrl(error instanceof Error ? error.message : "Kategori bilgileri geçersiz."));
   }
-  refreshCategoryPaths(values.slug);
+
+  const { error } = await supabase.from("categories").insert({ ...values!, is_active: true });
+  if (error) {
+    if (error.code === "23505") redirect(categoryErrorUrl("Bu kategori bağlantısı veya ürün kodu ön eki zaten kullanılıyor."));
+    if (error.code === "42501") redirect(categoryErrorUrl("Kategori ekleme yetkisi doğrulanamadı. Oturumu yenileyip tekrar dene."));
+    redirect(categoryErrorUrl(`Kategori eklenemedi${error.message ? `: ${error.message}` : "."}`));
+  }
+
+  refreshCategoryPaths(values!.slug);
+  redirect(`/admin/categories?created=${encodeURIComponent(values!.name)}`);
 }
 
 export async function updateCategory(form: FormData) {
   const supabase = await adminClient();
   const id = text(form, "id");
-  if (!id) throw new Error("Kategori bulunamadı.");
-  const values = parseValues(form);
+  if (!id) redirect(categoryErrorUrl("Kategori bulunamadı."));
+
+  let values: ReturnType<typeof parseValues>;
+  try {
+    values = parseValues(form);
+  } catch (error) {
+    redirect(categoryErrorUrl(error instanceof Error ? error.message : "Kategori bilgileri geçersiz."));
+  }
 
   const [{ count }, { data: current }] = await Promise.all([
     supabase.from("products").select("id", { count: "exact", head: true }).eq("category_id", id),
     supabase.from("categories").select("slug,code_prefix").eq("id", id).single(),
   ]);
-  if (!current) throw new Error("Kategori bulunamadı.");
-  if ((count ?? 0) > 0 && values.code_prefix !== current.code_prefix) {
-    throw new Error("Bu kategoride ürün bulunduğu için ürün kodu ön eki değiştirilemez.");
+  if (!current) redirect(categoryErrorUrl("Kategori bulunamadı."));
+  if ((count ?? 0) > 0 && values!.code_prefix !== current!.code_prefix) {
+    redirect(categoryErrorUrl("Bu kategoride ürün bulunduğu için ürün kodu ön eki değiştirilemez."));
   }
 
-  const { error } = await supabase.from("categories").update({ ...values, updated_at: new Date().toISOString() }).eq("id", id);
+  const { error } = await supabase.from("categories").update({ ...values!, updated_at: new Date().toISOString() }).eq("id", id);
   if (error) {
-    if (error.code === "23505") throw new Error("Bu kategori bağlantısı veya ürün kodu ön eki zaten kullanılıyor.");
-    throw new Error("Kategori güncellenemedi.");
+    if (error.code === "23505") redirect(categoryErrorUrl("Bu kategori bağlantısı veya ürün kodu ön eki zaten kullanılıyor."));
+    redirect(categoryErrorUrl(`Kategori güncellenemedi${error.message ? `: ${error.message}` : "."}`));
   }
-  refreshCategoryPaths(current.slug);
-  refreshCategoryPaths(values.slug);
+  refreshCategoryPaths(current!.slug);
+  refreshCategoryPaths(values!.slug);
+  redirect(`/admin/categories?updated=${encodeURIComponent(values!.name)}`);
 }
 
 export async function toggleCategory(form: FormData) {
@@ -98,8 +118,9 @@ export async function toggleCategory(form: FormData) {
     .from("categories")
     .update({ is_active: !active, updated_at: new Date().toISOString() })
     .eq("id", id)
-    .select("slug")
+    .select("slug,name")
     .single();
-  if (error) throw new Error("Kategori görünürlüğü güncellenemedi.");
+  if (error) redirect(categoryErrorUrl("Kategori görünürlüğü güncellenemedi."));
   refreshCategoryPaths(data?.slug);
+  redirect(`/admin/categories?updated=${encodeURIComponent(data?.name ?? "Kategori")}`);
 }
