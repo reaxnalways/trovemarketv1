@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { SiteHeader } from "../components/site-header";
+import { listPublicCategories } from "../modules/categories/repository";
 import { listPublicHomepageSlides, type HomepageSlideSection } from "../modules/homepage/slides";
 import { getPublicSiteSettings } from "../modules/settings/public-settings";
 import { HomeSlider } from "./home-slider-client";
@@ -18,7 +19,8 @@ const sections: { key: HomepageSlideSection; title: string }[] = [
 ];
 
 export default async function HomePage() {
-  const [slides, settings] = await Promise.all([listPublicHomepageSlides(), getPublicSiteSettings()]);
+  const [slides, settings, categories] = await Promise.all([listPublicHomepageSlides(), getPublicSiteSettings(), listPublicCategories()]);
+  const productCategories = categories.filter((category) => category.slug !== "teknik-servis");
   const motion = {
     slider_autoplay: settings.slider_autoplay,
     slider_interval_seconds: settings.slider_interval_seconds,
@@ -42,10 +44,7 @@ export default async function HomePage() {
           <details className="homeProductsMenu">
             <summary>Ürünler <span aria-hidden="true">⌄</span></summary>
             <div className="homeProductsDropdown">
-              <Link href="/kategori/telefon">Telefonlar</Link>
-              <Link href="/kategori/laptop-bilgisayar">Bilgisayarlar</Link>
-              <Link href="/kategori/giyilebilir-teknoloji">Giyilebilir Teknoloji</Link>
-              <Link href="/kategori/aksesuar-yedek-parca">Aksesuar & Yedek Parça</Link>
+              {productCategories.map((category) => <Link href={`/kategori/${category.slug}`} key={category.id}>{category.name}</Link>)}
             </div>
           </details>
           <Link href="/takas">Takas</Link>
@@ -69,7 +68,7 @@ export default async function HomePage() {
           <nav className="siteFooterLinks" aria-label="Alt menü">
             <Link href="/hakkimizda">Hakkımızda</Link>
             <Link href="/iletisim">İletişim</Link>
-            <Link href="/kategori/telefon">Ürünler</Link>
+            {productCategories[0] ? <Link href={`/kategori/${productCategories[0].slug}`}>Ürünler</Link> : null}
             <Link href="/takas">Takas</Link>
             <Link href="/kategori/teknik-servis">Teknik Servis</Link>
           </nav>
