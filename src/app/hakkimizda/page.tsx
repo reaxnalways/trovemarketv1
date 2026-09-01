@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "../../components/site-header";
 import { dictionary, getLocale } from "../../modules/i18n";
+import { translateText } from "../../modules/i18n/live-translation";
 import { getPublicSiteSettings } from "../../modules/settings/public-settings";
 import "./about.css";
 
@@ -23,7 +24,14 @@ export default async function AboutPage() {
   const [settings, locale] = await Promise.all([getPublicSiteSettings(), getLocale()]);
   const t = dictionary(locale);
   const en = locale === "en";
-  const about = parseAbout(settings.about_text || settings.site_tagline || (en ? "We are here for technology products, technical service and fast communication." : "Teknoloji ürünleri, teknik servis ve hızlı iletişim için yanınızdayız."));
+  const sourceAbout = parseAbout(settings.about_text || settings.site_tagline || "Teknoloji ürünleri, teknik servis ve hızlı iletişim için yanınızdayız.");
+  const [intro, vision, mission, values] = await Promise.all([
+    translateText(sourceAbout.intro, locale),
+    translateText(sourceAbout.vision, locale),
+    translateText(sourceAbout.mission, locale),
+    translateText(sourceAbout.values, locale),
+  ]);
+  const about = { intro, vision, mission, values };
 
   return <>
     <SiteHeader settings={settings} />
