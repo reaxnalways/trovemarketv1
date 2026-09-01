@@ -71,7 +71,7 @@ export async function createCategory(form: FormData) {
   const { error } = await supabase.from("categories").insert({ ...values!, is_active: true });
   if (error) {
     if (error.code === "23505") redirect(categoryErrorUrl("Bu kategori bağlantısı veya ürün kodu ön eki zaten kullanılıyor."));
-    if (error.code === "42501") redirect(categoryErrorUrl("Kategori ekleme yetkisi doğrulanamadı. Oturumu yenileyip tekrar dene."));
+    if (error.code === "42501") redirect(categoryErrorUrl("Kategori yazma yetkisi veritabanı tarafından reddedildi."));
     redirect(categoryErrorUrl(`Kategori eklenemedi${error.message ? `: ${error.message}` : "."}`));
   }
 
@@ -103,6 +103,7 @@ export async function updateCategory(form: FormData) {
   const { error } = await supabase.from("categories").update({ ...values!, updated_at: new Date().toISOString() }).eq("id", id);
   if (error) {
     if (error.code === "23505") redirect(categoryErrorUrl("Bu kategori bağlantısı veya ürün kodu ön eki zaten kullanılıyor."));
+    if (error.code === "42501") redirect(categoryErrorUrl("Kategori yazma yetkisi veritabanı tarafından reddedildi."));
     redirect(categoryErrorUrl(`Kategori güncellenemedi${error.message ? `: ${error.message}` : "."}`));
   }
   refreshCategoryPaths(current!.slug);
@@ -120,7 +121,10 @@ export async function toggleCategory(form: FormData) {
     .eq("id", id)
     .select("slug,name")
     .single();
-  if (error) redirect(categoryErrorUrl("Kategori görünürlüğü güncellenemedi."));
+  if (error) {
+    if (error.code === "42501") redirect(categoryErrorUrl("Kategori yazma yetkisi veritabanı tarafından reddedildi."));
+    redirect(categoryErrorUrl("Kategori görünürlüğü güncellenemedi."));
+  }
   refreshCategoryPaths(data?.slug);
   redirect(`/admin/categories?updated=${encodeURIComponent(data?.name ?? "Kategori")}`);
 }
