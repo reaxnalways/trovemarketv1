@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { LanguageSwitcher } from "./language-switcher";
+import { getLocale } from "../modules/i18n";
 import {
   FALLBACK_SITE_SETTINGS,
   type PublicSiteSettings,
@@ -8,16 +10,17 @@ type SiteHeaderProps = {
   settings?: PublicSiteSettings;
 };
 
-export function SiteHeader({ settings = FALLBACK_SITE_SETTINGS }: SiteHeaderProps = {}) {
+export async function SiteHeader({ settings = FALLBACK_SITE_SETTINGS }: SiteHeaderProps = {}) {
   const siteName = settings.site_name || "Trove Teknoloji";
+  const locale = await getLocale();
 
   return (
     <header className="siteHeader">
-      <div className="siteHeaderInner" style={{ justifyContent: "center" }}>
+      <div className="siteHeaderInner" style={{ justifyContent: "center", position: "relative" }}>
         <Link
           className="siteBrand"
           href="/"
-          aria-label={siteName + " ana sayfa"}
+          aria-label={siteName + (locale === "en" ? " home" : " ana sayfa")}
           style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, minWidth: 0 }}
         >
           {settings.logo_url ? (
@@ -44,6 +47,7 @@ export function SiteHeader({ settings = FALLBACK_SITE_SETTINGS }: SiteHeaderProp
             <span className="siteBrandText"><strong>{siteName}</strong></span>
           )}
         </Link>
+        <LanguageSwitcher locale={locale} />
       </div>
     </header>
   );
