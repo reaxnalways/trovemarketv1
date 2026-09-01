@@ -2,21 +2,13 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { SiteHeader } from "../components/site-header";
 import { listPublicCategories } from "../modules/categories/repository";
-import { listPublicHomepageSlides, type HomepageSlideSection } from "../modules/homepage/slides";
+import { categorySliderSection, listPublicHomepageSlides } from "../modules/homepage/slides";
 import { getPublicSiteSettings } from "../modules/settings/public-settings";
 import { HomeSlider } from "./home-slider-client";
 import "./home-ticker.css";
 import "./home-showcase.css";
 
 export const dynamic = "force-dynamic";
-
-const sections: { key: HomepageSlideSection; title: string }[] = [
-  { key: "campaigns", title: "Kampanyalar" },
-  { key: "phones", title: "Telefonlar" },
-  { key: "computers", title: "Bilgisayarlar" },
-  { key: "wearables", title: "Giyilebilir Teknoloji" },
-  { key: "accessories", title: "Aksesuarlar & Yedek Parçalar" },
-];
 
 export default async function HomePage() {
   const [slides, settings, categories] = await Promise.all([listPublicHomepageSlides(), getPublicSiteSettings(), listPublicCategories()]);
@@ -28,12 +20,14 @@ export default async function HomePage() {
     slider_reveal_effect: settings.slider_reveal_effect,
     slider_pause_on_hover: settings.slider_pause_on_hover,
   };
-  const visibleSections = sections
-    .map((section) => ({
-      ...section,
-      slides: slides.filter((slide) => slide.section === section.key),
-    }))
+  const sliderSections = [
+    { key: "campaigns", title: "Kampanyalar" },
+    ...productCategories.map((category) => ({ key: categorySliderSection(category.slug), title: category.name })),
+  ];
+  const visibleSections = sliderSections
+    .map((section) => ({ ...section, slides: slides.filter((slide) => slide.section === section.key) }))
     .filter((section) => section.slides.length > 0);
+  const firstProductHref = productCategories[0] ? `/kategori/${productCategories[0].slug}` : "/kategori/telefon";
 
   return (
     <>
@@ -68,7 +62,7 @@ export default async function HomePage() {
           <nav className="siteFooterLinks" aria-label="Alt menü">
             <Link href="/hakkimizda">Hakkımızda</Link>
             <Link href="/iletisim">İletişim</Link>
-            {productCategories[0] ? <Link href={`/kategori/${productCategories[0].slug}`}>Ürünler</Link> : null}
+            <Link href={firstProductHref}>Ürünler</Link>
             <Link href="/takas">Takas</Link>
             <Link href="/kategori/teknik-servis">Teknik Servis</Link>
           </nav>
