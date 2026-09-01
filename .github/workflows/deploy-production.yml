@@ -76,6 +76,7 @@ jobs:
               ? { ...item, id: process.env.VINEXT_KV_NAMESPACE_ID }
               : item
           );
+          config.ai = { binding: "AI" };
           config.vars = {
             ...(config.vars ?? {}),
             NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
