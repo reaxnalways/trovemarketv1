@@ -4,12 +4,13 @@ import { createCategory, toggleCategory, updateCategory } from "./actions";
 
 export default async function AdminCategoriesPage() {
   const supabase = await createSupabaseServerClient();
-  const { data } = await supabase
-    .from("categories")
-    .select("id,name,slug,code_prefix,description,is_active,sort_order,products(count)")
-    .order("sort_order", { ascending: true })
-    .order("name", { ascending: true });
-  const categories = data ?? [];
+  const [{ data: categoryData }, { data: productData }] = await Promise.all([
+    supabase.from("categories").select("id,name,slug,code_prefix,description,is_active,sort_order").order("sort_order", { ascending: true }).order("name", { ascending: true }),
+    supabase.from("products").select("category_id"),
+  ]);
+  const categories = categoryData ?? [];
+  const counts = new Map<string, number>();
+  for (const product of productData ?? []) counts.set(String(product.category_id), (counts.get(String(product.category_id)) ?? 0) + 1);
 
   return (
     <main className="adminShell adminShellWide adminReferencePage">
@@ -43,7 +44,7 @@ export default async function AdminCategoriesPage() {
       <section className="adminReferenceList">
         <div className="adminReferenceListHeader"><h2>Kategori listesi</h2><span>{categories.length} kategori</span></div>
         {categories.length ? categories.map((category) => {
-          const productCount = Array.isArray(category.products) ? Number(category.products[0]?.count ?? 0) : 0;
+          const productCount = counts.get(String(category.id)) ?? 0;
           return (
             <details className="adminReferenceRow" key={category.id}>
               <summary>
