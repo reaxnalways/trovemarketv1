@@ -1,6 +1,6 @@
 import { createPublicSupabaseClient } from "../../lib/supabase/public-client";
 
-export type HomepageSlideSection = "campaigns" | "phones" | "computers" | "wearables" | "accessories";
+export type HomepageSlideSection = string;
 export type HomepageSlideTransition = "slide" | "fade" | "zoom" | "flip" | "blur" | "stack";
 
 export type HomepageSlide = {
@@ -14,6 +14,10 @@ export type HomepageSlide = {
   is_active: boolean;
   transition_effect: HomepageSlideTransition | null;
 };
+
+export function categorySliderSection(slug: string) {
+  return `category:${slug}`;
+}
 
 export async function listPublicHomepageSlides(): Promise<HomepageSlide[]> {
   const supabase = createPublicSupabaseClient();
