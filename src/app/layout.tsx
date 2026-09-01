@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { getLocale } from "../modules/i18n";
 import { getPublicSiteSettings } from "../modules/settings/public-settings";
 import { SiteFooter } from "../components/site-footer";
 import "./globals.css";
@@ -23,6 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="tr"><body>{children}<SiteFooter /></body></html>;
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
+  return <html lang={locale}><body>{children}<SiteFooter /></body></html>;
 }
