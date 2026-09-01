@@ -9,6 +9,7 @@ import "../image-manager.css";
 import "../label.css";
 import "../slider-manager.css";
 import "../admin-compact.css";
+import "../admin-mobile-nav.css";
 
 export default async function ProtectedAdminLayout({
   children,
