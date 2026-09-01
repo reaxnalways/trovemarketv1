@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteHeader } from "../components/site-header";
 import { listPublicCategories } from "../modules/categories/repository";
 import { categorySliderSection, listPublicHomepageSlides } from "../modules/homepage/slides";
+import { dictionary, getLocale } from "../modules/i18n";
 import { getPublicSiteSettings } from "../modules/settings/public-settings";
 import { HomeSlider } from "./home-slider-client";
 import "./home-ticker.css";
@@ -11,7 +12,8 @@ import "./home-showcase.css";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [slides, settings, categories] = await Promise.all([listPublicHomepageSlides(), getPublicSiteSettings(), listPublicCategories()]);
+  const [slides, settings, categories, locale] = await Promise.all([listPublicHomepageSlides(), getPublicSiteSettings(), listPublicCategories(), getLocale()]);
+  const t = dictionary(locale);
   const productCategories = categories.filter((category) => category.slug !== "teknik-servis");
   const motion = {
     slider_autoplay: settings.slider_autoplay,
@@ -21,7 +23,7 @@ export default async function HomePage() {
     slider_pause_on_hover: settings.slider_pause_on_hover,
   };
   const sliderSections = [
-    { key: "campaigns", title: "Kampanyalar" },
+    { key: "campaigns", title: t.campaigns },
     ...productCategories.map((category) => ({ key: categorySliderSection(category.slug), title: category.name })),
   ];
   const visibleSections = sliderSections
@@ -34,20 +36,20 @@ export default async function HomePage() {
       <SiteHeader settings={settings} />
 
       <div className="homeHeaderActionsWrap">
-        <nav className="homePrimaryNav homePrimaryNavNotch" aria-label="Ana işlemler">
+        <nav className="homePrimaryNav homePrimaryNavNotch" aria-label={locale === "en" ? "Primary actions" : "Ana işlemler"}>
           <details className="homeProductsMenu">
-            <summary>Ürünler <span aria-hidden="true">⌄</span></summary>
+            <summary>{t.products} <span aria-hidden="true">⌄</span></summary>
             <div className="homeProductsDropdown">
               {productCategories.map((category) => <Link href={`/kategori/${category.slug}`} key={category.id}>{category.name}</Link>)}
             </div>
           </details>
-          <Link href="/takas">Takas</Link>
-          <Link href="/kategori/teknik-servis">Teknik Servis</Link>
+          <Link href="/takas">{t.tradeIn}</Link>
+          <Link href="/kategori/teknik-servis">{t.technicalService}</Link>
         </nav>
       </div>
 
       {settings.announcement_enabled ? (
-        <div className={`homeTicker${settings.announcement_pause_on_hover ? "" : " homeTickerNoPause"}`} aria-label="Trove Teknoloji duyuruları" style={{ "--ticker-duration": `${settings.announcement_speed_seconds}s` } as CSSProperties}>
+        <div className={`homeTicker${settings.announcement_pause_on_hover ? "" : " homeTickerNoPause"}`} aria-label={t.announcements} style={{ "--ticker-duration": `${settings.announcement_speed_seconds}s` } as CSSProperties}>
           <div className="homeTickerViewport"><div className="homeTickerTrack">{[0, 1].map((group) => <div className="homeTickerGroup" aria-hidden={group === 1} key={group}>{settings.announcement_items.map((item) => <span className="homeTickerItem" key={`${group}-${item}`}>{item}</span>)}</div>)}</div></div>
         </div>
       ) : null}
@@ -58,13 +60,13 @@ export default async function HomePage() {
 
       <footer className="siteFooter">
         <div className="siteFooterInner">
-          <div className="siteFooterBrand"><strong>{settings.site_name}</strong><span>{settings.site_tagline || "Teknoloji, ürün ve servis."}</span></div>
-          <nav className="siteFooterLinks" aria-label="Alt menü">
-            <Link href="/hakkimizda">Hakkımızda</Link>
-            <Link href="/iletisim">İletişim</Link>
-            <Link href={firstProductHref}>Ürünler</Link>
-            <Link href="/takas">Takas</Link>
-            <Link href="/kategori/teknik-servis">Teknik Servis</Link>
+          <div className="siteFooterBrand"><strong>{settings.site_name}</strong><span>{settings.site_tagline || t.footerTagline}</span></div>
+          <nav className="siteFooterLinks" aria-label={locale === "en" ? "Footer navigation" : "Alt menü"}>
+            <Link href="/hakkimizda">{t.about}</Link>
+            <Link href="/iletisim">{t.contact}</Link>
+            <Link href={firstProductHref}>{t.products}</Link>
+            <Link href="/takas">{t.tradeIn}</Link>
+            <Link href="/kategori/teknik-servis">{t.technicalService}</Link>
           </nav>
         </div>
       </footer>
