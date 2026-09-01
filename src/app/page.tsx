@@ -26,6 +26,12 @@ export default async function HomePage() {
     slider_reveal_effect: settings.slider_reveal_effect,
     slider_pause_on_hover: settings.slider_pause_on_hover,
   };
+  const visibleSections = sections
+    .map((section) => ({
+      ...section,
+      slides: slides.filter((slide) => slide.section === section.key),
+    }))
+    .filter((section) => section.slides.length > 0);
 
   return (
     <>
@@ -54,7 +60,7 @@ export default async function HomePage() {
       ) : null}
 
       <main className="shell homeShowcase">
-        {sections.map((section) => <HomeSlider key={section.key} section={section.key} slides={slides.filter((slide) => slide.section === section.key)} title={section.title} motion={motion} />)}
+        {visibleSections.map((section) => <HomeSlider key={section.key} section={section.key} slides={section.slides} title={section.title} motion={motion} />)}
       </main>
 
       <footer className="siteFooter">
