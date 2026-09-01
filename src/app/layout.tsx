@@ -7,15 +7,17 @@ export const viewport: Viewport = { themeColor: "#080a0f" };
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSiteSettings();
+  const appIconUrl = settings.app_icon_url || settings.logo_url || "/api/app-icon?size=512";
+
   return {
     title: settings.site_meta_title,
     description: settings.site_meta_description,
     applicationName: settings.pwa_name,
     manifest: "/manifest.webmanifest",
     icons: {
-      icon: [{ url: "/api/app-icon?size=512", sizes: "512x512", type: "image/png" }],
-      shortcut: "/api/app-icon?size=192",
-      apple: [{ url: "/api/app-icon?size=180", sizes: "180x180", type: "image/png" }],
+      icon: [{ url: appIconUrl, type: "image/png" }],
+      shortcut: appIconUrl,
+      apple: [{ url: appIconUrl, type: "image/png" }],
     },
     appleWebApp: { capable: true, title: settings.pwa_name, statusBarStyle: "black-translucent" },
   };
