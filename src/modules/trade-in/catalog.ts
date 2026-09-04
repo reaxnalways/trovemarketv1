@@ -1,6 +1,6 @@
 import { createPublicSupabaseClient } from "@/lib/supabase/public-client";
 
-export type TradeInCatalogDevice = { id: string; device_type: string; brand: string; model: string; storage: string; color: string };
+export type TradeInCatalogDevice = { id: string; device_type: string; brand: string; model: string; storage: string; color: string; has_tr: boolean; has_passport: boolean; has_international: boolean };
 export type TradeInCostOption = { code: string; label: string; amount: number; category: "repair" | "accessory"; sort_order: number; form_field?: string | null; form_value?: string | null };
 
 export async function listPublicTradeInDevices(): Promise<TradeInCatalogDevice[]> {
