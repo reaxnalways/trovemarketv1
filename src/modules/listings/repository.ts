@@ -2,7 +2,7 @@ import { createPublicSupabaseClient } from "../../lib/supabase/public-client";
 import { resolvePublicListings, type ListingQueryResult, type PublicListing } from "./public-listings";
 
 const PUBLIC_LISTING_FIELDS = [
-  "id", "product_code", "title", "brand", "model", "storage", "price", "images", "stock_status", "is_featured", "created_at",
+  "id", "product_code", "title", "brand", "model", "storage", "price", "description", "images", "stock_status", "is_featured", "created_at",
 ].join(",");
 
 const PUBLIC_LISTING_DETAIL_FIELDS = [
