@@ -1,6 +1,7 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createManualListing } from "./actions";
 
@@ -23,6 +24,7 @@ function fileExtension(file: File): string {
 }
 
 export function ManualListingForm({ categories, supabaseUrl, supabasePublishableKey }: ManualListingFormProps) {
+  const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export function ManualListingForm({ categories, supabaseUrl, supabasePublishable
       }
 
       setStatus("İlan kaydediliyor...");
-      await createManualListing({
+      const created = await createManualListing({
         categoryId: String(form.get("categoryId") ?? ""),
         title: String(form.get("title") ?? ""),
         brand: String(form.get("brand") ?? ""),
@@ -100,6 +102,9 @@ export function ManualListingForm({ categories, supabaseUrl, supabasePublishable
         isFeatured: form.get("isFeatured") === "on",
         images: imageUrls,
       });
+      setStatus("İlan oluşturuldu, ürün açılıyor...");
+      router.push(`/admin/listings/${created.id}?created=1`);
+      router.refresh();
     } catch (caught) {
       setBusy(false);
       setStatus(null);
