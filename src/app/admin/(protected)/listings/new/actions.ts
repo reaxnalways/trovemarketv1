@@ -80,11 +80,15 @@ export async function createManualListing(input: {
   const { data, error } = await supabase
     .from("products")
     .insert({ ...listing, publication_status: publicationStatus, is_featured: input.isFeatured })
-    .select("id")
+    .select("id,product_code")
     .single();
 
-  if (error || !data) throw new Error("Manuel ilan kaydedilemedi.");
-  redirect(`/admin/listings/${data.id}?created=1`);
+  if (error || !data) {
+    console.error("createManualListing insert failed", { code: error?.code, message: error?.message, details: error?.details, hint: error?.hint });
+    throw new Error(error?.message ? `Manuel ilan kaydedilemedi: ${error.message}` : "Manuel ilan kaydedilemedi.");
+  }
+
+  return { id: data.id, productCode: data.product_code };
 }
 
 export async function createImportedDraftListing(sourceUrl: string, sourceText: string, imageUrls: string[]) {
