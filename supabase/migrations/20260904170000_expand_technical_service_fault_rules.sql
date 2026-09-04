@@ -25,12 +25,14 @@ from (values
   ('Sıvı teması / oksit temizliği', 'liquid_cleaning', 12::numeric, 1500::numeric, 100),
   ('Anakart onarımı', 'motherboard', 22::numeric, 2500::numeric, 110),
   ('Açılmıyor / güç arızası', 'no_power', 18::numeric, 2000::numeric, 111),
-  ('Yazılım / sistem onarımı', 'software', 4::numeric, 600::numeric, 120),
-  ('Veri aktarımı / yedekleme', 'data_transfer', 3::numeric, 500::numeric, 121)
-) as v(label, code, pct, minimum, sort_order)
+  ('Yazılım / sistem onarımı', 'software', 4::numeric, 600::numeric, true, 120),
+  ('Veri aktarımı / yedekleme', 'data_transfer', 3::numeric, 500::numeric, true, 121)
+) as v(label, code, pct, minimum, active, sort_order)
 where not exists (select 1 from public.pricing_fault_rules r where r.service_fault_code=v.code);
 
-create or replace function public.get_service_price_catalog()
+-- Public catalog exposes service operation labels/codes only; actual estimates stay in estimate_service_price.
+drop function if exists public.get_service_price_catalog();
+create function public.get_service_price_catalog()
 returns table(id uuid, device_type text, brand text, model text, fault_code text, fault_label text, min_price numeric, max_price numeric)
 language sql stable security definer set search_path to '' as $$
   select r.id,'Telefon'::text,''::text,''::text,r.service_fault_code,r.label,coalesce(r.min_service_price,0),coalesce(r.max_service_price,0)
