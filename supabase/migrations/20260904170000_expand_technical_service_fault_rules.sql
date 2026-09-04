@@ -28,6 +28,15 @@ from (values
   ('Yazılım / sistem onarımı', 'software', 4::numeric, 600::numeric, 120),
   ('Veri aktarımı / yedekleme', 'data_transfer', 3::numeric, 500::numeric, 121)
 ) as v(label, code, pct, minimum, sort_order)
-where not exists (
-  select 1 from public.pricing_fault_rules r where r.service_fault_code = v.code
-);
+where not exists (select 1 from public.pricing_fault_rules r where r.service_fault_code=v.code);
+
+create or replace function public.get_service_price_catalog()
+returns table(id uuid, device_type text, brand text, model text, fault_code text, fault_label text, min_price numeric, max_price numeric)
+language sql stable security definer set search_path to '' as $$
+  select r.id,'Telefon'::text,''::text,''::text,r.service_fault_code,r.label,coalesce(r.min_service_price,0),coalesce(r.max_service_price,0)
+  from public.pricing_fault_rules r
+  where r.is_active=true and r.service_fault_code is not null and r.service_pct>0
+  order by r.sort_order,r.label
+$$;
+revoke all on function public.get_service_price_catalog() from public;
+grant execute on function public.get_service_price_catalog() to anon,authenticated;
