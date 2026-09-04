@@ -7,7 +7,6 @@ import { logoutAdmin } from "./actions";
 
 const navGroups = [
   { label:"Ürün Yönetimi", items:[{label:"Ürünler",href:"/admin/listings"},{label:"Yeni ürün ekle",href:"/admin/listings/new"},{label:"Kategoriler",href:"/admin/categories"},{label:"Siparişler",href:"/admin/purchases"},{label:"Barkod tara",href:"/admin/scan"},{label:"Etiket yazdır",href:"/admin/labels"}] },
-  { label:"Takas", items:[{label:"Takas cihazları",href:"/admin/trade-in"}] },
   { label:"Teknik Servis", items:[{label:"Servis kayıtları",href:"/admin/technical-service#servis-kayitlari"},{label:"Yeni servis kaydı",href:"/admin/technical-service#yeni-kayit"},{label:"Servis barkodu",href:"/admin/technical-service/scanner"},{label:"Arşiv",href:"/admin/technical-service#arsiv"}] },
   { label:"Site Yönetimi", items:[{label:"Slider & içerik",href:"/admin/content"},{label:"Ana sayfa",href:"/admin/settings/homepage"},{label:"Şirket & iletişim",href:"/admin/settings/company"},{label:"Logo & site kimliği",href:"/admin/settings/site"},{label:"Tüm ayarlar",href:"/admin/settings"}] },
 ] as const;
