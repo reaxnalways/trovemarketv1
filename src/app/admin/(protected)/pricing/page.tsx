@@ -31,15 +31,19 @@ export default async function AdminPricingPage({ searchParams }: Props) {
     { data: segmentRules },
     { data: overrides },
     { data: hybridHistory },
+    { data: categories },
+    { data: scopedHistory },
   ] = await Promise.all([
     supabase.from("site_settings").select("usd_try_rate,fx_rounding_step").eq("id", true).maybeSingle(),
-    supabase.from("products").select("id,product_code,title,price,publication_status,stock_status").order("created_at", { ascending: false }).limit(150),
+    supabase.from("products").select("id,product_code,title,brand,model,category_id,price,publication_status,stock_status").order("created_at", { ascending: false }).limit(150),
     supabase.from("trade_in_devices").select("id,device_type,brand,model,storage,market_price_tr,market_price_passport,market_price_international,profit_margin_pct,is_active").order("brand").order("model").limit(300),
     supabase.from("price_update_history").select("id,base_rate,target_rate,rounding_step,affected_count,product_count,trade_in_device_count,cost_reference_count,service_reference_count,created_at").order("created_at", { ascending: false }).limit(10),
     supabase.from("pricing_fault_rules").select("id,label,service_fault_code,trade_in_cost_code,service_pct,trade_in_pct,min_service_price,max_service_price,min_trade_in_deduction,max_trade_in_deduction,is_active").order("sort_order"),
     supabase.from("pricing_segment_rules").select("code,label,multiplier").order("sort_order"),
     supabase.from("pricing_overrides").select("id,device_type,brand,model,service_fault_code,trade_in_cost_code,service_min_price,service_max_price,trade_in_deduction,exclude_from_bulk,note,is_active,updated_at").order("updated_at", { ascending: false }),
     supabase.from("pricing_bulk_history").select("id,target,percentage,include_overrides,rule_count,override_count,created_at,rolled_back_at").order("created_at", { ascending: false }).limit(10),
+    supabase.from("categories").select("id,name").order("name"),
+    supabase.from("pricing_scoped_bulk_history").select("id,scope_type,brand,model,targets,percentage,affected_counts,created_at,rolled_back_at").order("created_at", { ascending: false }).limit(20),
   ]);
 
   const savedRate = settings?.usd_try_rate == null ? null : Number(settings.usd_try_rate);
@@ -72,7 +76,7 @@ export default async function AdminPricingPage({ searchParams }: Props) {
       {view === "products" ? <ProductPriceList products={products ?? []} /> : null}
       {view === "trade" ? <TradePriceList devices={tradeInDevices ?? []} /> : null}
       {view === "engine" ? <EnginePanel faultRules={faultRules ?? []} segmentRules={segmentRules ?? []} overrides={overrides ?? []} /> : null}
-      {view === "bulk" ? <BulkPanel savedRate={savedRate} baseRate={baseRate} targetRate={targetRate} roundingStep={roundingStep} hybridHistory={hybridHistory ?? []} history={history ?? []} /> : null}
+      {view === "bulk" ? <BulkPanel savedRate={savedRate} baseRate={baseRate} targetRate={targetRate} roundingStep={roundingStep} hybridHistory={hybridHistory ?? []} history={history ?? []} categories={categories ?? []} products={products ?? []} scopedHistory={scopedHistory ?? []} /> : null}
     </main>
   );
 }
