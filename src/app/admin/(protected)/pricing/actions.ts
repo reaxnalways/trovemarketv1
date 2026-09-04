@@ -17,6 +17,7 @@ function parsePositiveNumber(value: FormDataEntryValue | null) { if (typeof valu
 function parseNumber(formData: FormData, key: string, min = 0) { const value = Number(text(formData, key).replace(",", ".")); if (!Number.isFinite(value) || value < min) throw new Error("Geçerli bir sayı gir."); return value; }
 function parseOptionalNumber(formData: FormData, key: string) { const raw = text(formData, key); if (!raw) return null; const value = Number(raw.replace(",", ".")); if (!Number.isFinite(value) || value < 0) throw new Error("Geçerli bir tutar gir."); return value; }
 function refreshPricing() { ["/","/admin/pricing","/admin/listings","/admin/trade-in","/admin/trade-in/costs","/admin/technical-service/prices","/takas","/kategori/teknik-servis"].forEach((path) => revalidatePath(path)); }
+function pricingModel(brand:string,model:string){return brand==="Samsung"&&model==="Galaxy S26+"?"Galaxy S26 Plus":model;}
 
 export async function updateProductPrice(formData: FormData) {
   const id = text(formData, "id");
@@ -29,17 +30,28 @@ export async function updateProductPrice(formData: FormData) {
 }
 
 export async function createTradeInDevicePrice(formData: FormData) {
-  const deviceType = text(formData, "deviceType");
-  const brand = text(formData, "brand");
-  const model = text(formData, "model");
-  if (!deviceType || !brand || !model) throw new Error("Cihaz türü, marka ve model zorunludur.");
-  const tr = parseNumber(formData, "marketPriceTr");
+  const catalogId = text(formData, "catalogId");
+  const tr = parseNumber(formData, "marketPriceTr", 1);
   const passport = parseNumber(formData, "marketPricePassport");
   const international = parseNumber(formData, "marketPriceInternational");
   const margin = parseNumber(formData, "profitMarginPct");
   if (margin > 60) throw new Error("Kâr marjı %60'tan büyük olamaz.");
   const supabase = await requireAdmin();
+
+  let deviceType = text(formData, "deviceType");
+  let brand = text(formData, "brand");
+  let model = text(formData, "model");
+  if (catalogId) {
+    const { data: catalog, error: catalogError } = await supabase.from("device_model_catalog").select("id,device_type,brand,model").eq("id", catalogId).single();
+    if (catalogError || !catalog) throw new Error("Katalog kaydı bulunamadı.");
+    deviceType = catalog.device_type;
+    brand = catalog.brand;
+    model = pricingModel(catalog.brand, catalog.model);
+  }
+  if (!deviceType || !brand || !model) throw new Error("Cihaz türü, marka ve model zorunludur.");
+
   const { error } = await supabase.from("trade_in_devices").insert({
+    catalog_id: catalogId || null,
     device_type: deviceType,
     brand,
     model,
@@ -52,21 +64,24 @@ export async function createTradeInDevicePrice(formData: FormData) {
     market_price_international: international,
     profit_margin_pct: margin,
     is_active: true,
+    fx_index_enabled: false,
     updated_at: new Date().toISOString(),
   });
   if (error) throw new Error(error.code === "23505" ? "Bu cihaz/varyant zaten listede." : "Takas cihazı eklenemedi.");
+  if (catalogId) await supabase.from("device_model_catalog").update({ reference_price_tr: tr, price_status: "verified", updated_at: new Date().toISOString() }).eq("id", catalogId);
   refreshPricing();
 }
 
 export async function updateTradeInDevicePrice(formData: FormData) {
   const id = text(formData, "id");
   if (!id) throw new Error("Takas cihazı kimliği eksik.");
-  const tr = parseNumber(formData, "marketPriceTr");
+  const tr = parseNumber(formData, "marketPriceTr", 1);
   const passport = parseNumber(formData, "marketPricePassport");
   const international = parseNumber(formData, "marketPriceInternational");
   const margin = parseNumber(formData, "profitMarginPct");
   if (margin > 60) throw new Error("Kâr marjı %60'tan büyük olamaz.");
   const supabase = await requireAdmin();
+  const { data: row } = await supabase.from("trade_in_devices").select("catalog_id").eq("id", id).maybeSingle();
   const { error } = await supabase.from("trade_in_devices").update({
     market_price_tr: tr,
     market_price_passport: passport,
@@ -74,9 +89,11 @@ export async function updateTradeInDevicePrice(formData: FormData) {
     base_estimate: tr,
     max_estimate: Math.max(tr, passport, international),
     profit_margin_pct: margin,
+    is_active: true,
     updated_at: new Date().toISOString(),
   }).eq("id", id);
   if (error) throw new Error("Takas cihazı fiyatları güncellenemedi.");
+  if (row?.catalog_id) await supabase.from("device_model_catalog").update({ reference_price_tr: tr, price_status: "verified", updated_at: new Date().toISOString() }).eq("id", row.catalog_id);
   refreshPricing();
 }
 
