@@ -4,14 +4,12 @@ import {
   applyBulkPriceUpdate,
   applyHybridBulkAdjustment,
   createPricingOverride,
-  createTradeInDevicePrice,
   deletePricingOverride,
   rollbackHybridBulkAdjustment,
   updatePricingRule,
-  updateProductPrice,
   updateSegmentRule,
-  updateTradeInDevicePrice,
 } from "./actions";
+import { ProductPriceList, TradePriceList } from "./price-lists-client";
 
 type View = "products" | "trade" | "engine" | "bulk";
 type Props = { searchParams: Promise<{ view?: string; base?: string; target?: string; rounding?: string; error?: string; updated?: string; rate?: string }> };
@@ -68,39 +66,8 @@ export default async function AdminPricingPage({ searchParams }: Props) {
         <Link className={view === "bulk" ? "isActive" : ""} href={tabHref("bulk")}>Toplu İşlemler & Geçmiş</Link>
       </nav>
 
-      {view === "products" ? (
-        <section className="adminCompactPanel adminCompactPanelOpen">
-          <div className="adminCompactPanelTitle"><div><strong>Ürün satış fiyatları</strong><small>İlanların satış fiyatını buradan değiştir.</small></div><strong>{products?.length ?? 0}</strong></div>
-          {products?.length ? <div className="adminCompactList">{products.map((product) => (
-            <form action={updateProductPrice} className="adminCompactRow" key={product.id}>
-              <input type="hidden" name="id" value={product.id} />
-              <div><strong>{product.title}</strong><small>{product.product_code} · {product.publication_status} · {product.stock_status}</small></div>
-              <div className="adminInlineActions"><label className="adminField">Satış fiyatı<input name="price" inputMode="decimal" defaultValue={product.price ?? ""} placeholder="Fiyat yok" /></label><button className="adminButton">Kaydet</button><Link className="adminButton adminButtonSecondary" href={`/admin/listings/${product.id}`}>Ürünü aç</Link></div>
-            </form>
-          ))}</div> : <p className="emptyState">Henüz ürün yok.</p>}
-        </section>
-      ) : null}
-
-      {view === "trade" ? (
-        <section className="adminCompactPanel adminCompactPanelOpen">
-          <div className="adminCompactPanelTitle"><div><strong>Takas piyasa fiyatları</strong><small>TR, YD kayıtlı ve YD kayıtsız referans değerleri.</small></div><strong>{tradeInDevices?.length ?? 0}</strong></div>
-          <details className="adminReferenceTool" style={{ marginBottom: 16 }}><summary><span><strong>Yeni takas cihazı ekle</strong><small>Yeni model veya varyant tanımla</small></span><b>+</b></summary>
-            <form action={createTradeInDevicePrice} className="adminReferenceForm">
-              <label className="adminField">Cihaz türü<select name="deviceType" required defaultValue="Telefon"><option>Telefon</option><option>Laptop / Bilgisayar</option><option>Tablet</option><option>Akıllı Saat</option><option>Kulaklık</option><option>Diğer</option></select></label>
-              <label className="adminField">Marka<input name="brand" required /></label><label className="adminField">Model<input name="model" required /></label><label className="adminField">Hafıza / varyant<input name="storage" /></label>
-              <label className="adminField">TR fiyat<input name="marketPriceTr" inputMode="decimal" required /></label><label className="adminField">YD kayıtlı<input name="marketPricePassport" inputMode="decimal" required /></label><label className="adminField">YD kayıtsız<input name="marketPriceInternational" inputMode="decimal" required /></label><label className="adminField">Kâr marjı %<input name="profitMarginPct" inputMode="decimal" required defaultValue="15" /></label>
-              <div className="adminReferenceFormActions"><button className="adminButton">Cihazı ekle</button></div>
-            </form>
-          </details>
-          {tradeInDevices?.length ? <div className="adminCompactList">{tradeInDevices.map((device) => (
-            <form action={updateTradeInDevicePrice} className="adminCompactRow" key={device.id}>
-              <input type="hidden" name="id" value={device.id} />
-              <div><strong>{device.brand} {device.model}</strong><small>{device.device_type}{device.storage ? ` · ${device.storage}` : ""} · {device.is_active ? "Aktif" : "Gizli"}</small></div>
-              <div className="adminInlineActions"><label className="adminField">TR<input name="marketPriceTr" inputMode="decimal" defaultValue={Number(device.market_price_tr)} required /></label><label className="adminField">YD kayıtlı<input name="marketPricePassport" inputMode="decimal" defaultValue={Number(device.market_price_passport)} required /></label><label className="adminField">YD kayıtsız<input name="marketPriceInternational" inputMode="decimal" defaultValue={Number(device.market_price_international)} required /></label><label className="adminField">Kâr %<input name="profitMarginPct" inputMode="decimal" defaultValue={Number(device.profit_margin_pct)} required /></label><button className="adminButton adminButtonSecondary">Kaydet</button></div>
-            </form>
-          ))}</div> : <p className="emptyState">Takas referans cihazı yok.</p>}
-        </section>
-      ) : null}
+      {view === "products" ? <ProductPriceList products={products ?? []} /> : null}
+      {view === "trade" ? <TradePriceList devices={tradeInDevices ?? []} /> : null}
 
       {view === "engine" ? (
         <>
