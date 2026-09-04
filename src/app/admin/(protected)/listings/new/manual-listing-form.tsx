@@ -3,6 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
+import { buildDraftListing } from "@/modules/listings/create-listing";
 
 type CategoryOption = { id: string; name: string };
 
@@ -71,6 +72,11 @@ export function ManualListingForm({ categories, supabaseUrl, supabasePublishable
     const imageUrls: string[] = [];
 
     try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
+      if (sessionError || !sessionData.user) {
+        throw new Error("Oturum doğrulanamadı. Lütfen admin paneline yeniden giriş yap.");
+      }
+
       setStatus("Görseller yükleniyor...");
       for (const file of files) {
         const path = `products/${crypto.randomUUID()}.${fileExtension(file)}`;
@@ -85,35 +91,44 @@ export function ManualListingForm({ categories, supabaseUrl, supabasePublishable
       }
 
       setStatus("İlan kaydediliyor...");
-      const response = await fetch("/api/admin/listings", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          categoryId: String(form.get("categoryId") ?? ""),
-          title: String(form.get("title") ?? ""),
-          brand: String(form.get("brand") ?? ""),
-          model: String(form.get("model") ?? ""),
-          price: String(form.get("price") ?? ""),
-          condition: String(form.get("condition") ?? ""),
-          storage: String(form.get("storage") ?? ""),
-          color: String(form.get("color") ?? ""),
-          batteryHealth: String(form.get("batteryHealth") ?? ""),
-          deviceRegion: String(form.get("deviceRegion") ?? ""),
-          description: String(form.get("description") ?? ""),
-          publicationStatus: String(form.get("publicationStatus") ?? "draft"),
-          isFeatured: form.get("isFeatured") === "on",
-          images: imageUrls,
-        }),
+      const deviceRegionValue = String(form.get("deviceRegion") ?? "");
+      const deviceRegion = ["tr", "passport", "international"].includes(deviceRegionValue)
+        ? deviceRegionValue as "tr" | "passport" | "international"
+        : undefined;
+
+      const listing = buildDraftListing({
+        categoryId: String(form.get("categoryId") ?? ""),
+        title: String(form.get("title") ?? ""),
+        brand: String(form.get("brand") ?? ""),
+        model: String(form.get("model") ?? ""),
+        price: String(form.get("price") ?? ""),
+        condition: String(form.get("condition") ?? ""),
+        storage: String(form.get("storage") ?? ""),
+        color: String(form.get("color") ?? ""),
+        batteryHealth: String(form.get("batteryHealth") ?? ""),
+        deviceRegion,
+        description: String(form.get("description") ?? ""),
+        images: imageUrls,
       });
 
-      const result = await response.json().catch(() => null) as { ok?: boolean; id?: string; error?: string } | null;
-      if (!response.ok || !result?.ok || !result.id) {
-        throw new Error(result?.error ?? `İlan kaydedilemedi. Sunucu kodu: ${response.status}`);
+      const publicationStatus = String(form.get("publicationStatus") ?? "draft") === "published" ? "published" : "draft";
+      const { data: created, error: insertError } = await supabase
+        .from("products")
+        .insert({
+          ...listing,
+          publication_status: publicationStatus,
+          is_featured: form.get("isFeatured") === "on",
+        })
+        .select("id,product_code")
+        .single();
+
+      if (insertError || !created) {
+        const detail = [insertError?.message, insertError?.details, insertError?.hint].filter(Boolean).join(" — ");
+        throw new Error(detail ? `İlan kaydedilemedi: ${detail}` : "İlan kaydedilemedi.");
       }
 
       setStatus("İlan oluşturuldu, ürün açılıyor...");
-      router.push(`/admin/listings/${result.id}?created=1`);
+      router.push(`/admin/listings/${created.id}?created=1`);
       router.refresh();
     } catch (caught) {
       setBusy(false);
