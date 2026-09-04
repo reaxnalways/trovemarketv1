@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isAdminEmail } from "@/modules/auth/admin-access";
+import { collectCategoryAttributes } from "@/modules/listings/category-product-fields";
 
 async function requireAdmin() {
   const supabase = await createSupabaseServerClient();
@@ -66,6 +67,7 @@ export async function updateListing(formData: FormData) {
   const batteryHealth = rawBattery === null ? null : Number(rawBattery);
   const deviceRegion = optional(formData.get("deviceRegion"));
   const intent = optional(formData.get("actionIntent"));
+  const categorySlug = optional(formData.get("categorySlug"));
 
   if (batteryHealth !== null && (!Number.isInteger(batteryHealth) || batteryHealth < 0 || batteryHealth > 100)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Pil sağlığı 0-100 arasında olmalıdır.")}`);
   if (deviceRegion !== null && !["tr", "passport", "international"].includes(deviceRegion)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz cihaz kayıt türü.")}`);
@@ -83,6 +85,7 @@ export async function updateListing(formData: FormData) {
     color: optional(formData.get("color")),
     battery_health: batteryHealth,
     device_region: deviceRegion,
+    attributes: collectCategoryAttributes(formData, categorySlug),
     description: optional(formData.get("description")),
     source_url: optional(formData.get("sourceUrl")),
     stock_status: optional(formData.get("stockStatus")) ?? "in_stock",
