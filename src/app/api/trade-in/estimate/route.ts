@@ -14,18 +14,22 @@ export async function POST(request: Request) {
     const accessoryCostCodes = Array.isArray(body.accessoryCostCodes)
       ? body.accessoryCostCodes.map((value: unknown) => String(value)).filter(Boolean).join(",")
       : String(body.accessoryCostCode ?? "");
+    const faultCodes = Array.isArray(body.faultCodes)
+      ? body.faultCodes.map((value: unknown) => String(value)).filter(Boolean).join(",")
+      : "";
 
     const supabase = createPublicSupabaseClient();
     const { data, error } = await supabase.rpc("estimate_trade_in", {
       p_device_id: deviceId,
       p_region: region,
-      p_cosmetic: String(body.cosmetic ?? ""),
-      p_working: String(body.working ?? ""),
+      p_cosmetic: "",
+      p_working: "",
       p_screen: String(body.screen ?? ""),
       p_body: String(body.body ?? ""),
       p_battery: String(body.battery ?? ""),
       p_repair_cost_code: String(body.repairCostCode ?? ""),
       p_accessory_cost_code: accessoryCostCodes,
+      p_fault_codes: faultCodes,
     });
     if (error || !data?.length) return NextResponse.json({ error: "Bu cihaz için otomatik tahmin oluşturulamadı." }, { status: 404 });
 
@@ -41,13 +45,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({
-      estimate: Number(row.estimate),
-      min: Number(row.estimate_min),
-      max: Number(row.estimate_max),
-      confidence: row.confidence,
-      requiresStoreReview: false,
-    });
+    return NextResponse.json({ estimate: Number(row.estimate), min: Number(row.estimate_min), max: Number(row.estimate_max), confidence: row.confidence, requiresStoreReview: false });
   } catch {
     return NextResponse.json({ error: "Tahmini fiyat hesaplanamadı." }, { status: 500 });
   }
