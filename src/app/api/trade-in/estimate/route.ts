@@ -2,20 +2,21 @@ import { NextResponse } from "next/server";
 import { createPublicSupabaseClient } from "@/lib/supabase/public-client";
 
 const MAX_DEDUCTION_RATIO = 0.45;
+const ALLOWED_REGIONS = new Set(["tr", "passport", "international"]);
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const deviceId = String(body.deviceId ?? "");
-    const region = String(body.region ?? "");
+    const deviceId = String(body.deviceId ?? "").trim();
+    const region = String(body.region ?? "").trim();
     if (!deviceId) return NextResponse.json({ error: "Cihaz seçilmedi." }, { status: 400 });
-    if (!region) return NextResponse.json({ error: "Cihaz bölgesi seçilmedi." }, { status: 400 });
+    if (!ALLOWED_REGIONS.has(region)) return NextResponse.json({ error: "Geçerli bir cihaz bölgesi seçilmedi." }, { status: 400 });
 
     const accessoryCostCodes = Array.isArray(body.accessoryCostCodes)
-      ? body.accessoryCostCodes.map((value: unknown) => String(value)).filter(Boolean).join(",")
-      : String(body.accessoryCostCode ?? "");
+      ? Array.from(new Set(body.accessoryCostCodes.map((value: unknown) => String(value).trim()).filter(Boolean))).join(",")
+      : String(body.accessoryCostCode ?? "").trim();
     const faultCodes = Array.isArray(body.faultCodes)
-      ? body.faultCodes.map((value: unknown) => String(value)).filter(Boolean).join(",")
+      ? Array.from(new Set(body.faultCodes.map((value: unknown) => String(value).trim()).filter((code: string) => Boolean(code) && code !== "ok"))).join(",")
       : "";
 
     const supabase = createPublicSupabaseClient();
