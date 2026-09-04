@@ -31,8 +31,7 @@ from (values
 where not exists (select 1 from public.pricing_fault_rules r where r.service_fault_code=v.code);
 
 -- Public catalog exposes service operation labels/codes only; actual estimates stay in estimate_service_price.
-drop function if exists public.get_service_price_catalog();
-create function public.get_service_price_catalog()
+create or replace function public.get_service_price_catalog()
 returns table(id uuid, device_type text, brand text, model text, fault_code text, fault_label text, min_price numeric, max_price numeric)
 language sql stable security definer set search_path to '' as $$
   select r.id,'Telefon'::text,''::text,''::text,r.service_fault_code,r.label,coalesce(r.min_service_price,0),coalesce(r.max_service_price,0)
