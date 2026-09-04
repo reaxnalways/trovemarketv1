@@ -11,6 +11,10 @@ export async function POST(request: Request) {
     if (!deviceId) return NextResponse.json({ error: "Cihaz seçilmedi." }, { status: 400 });
     if (!region) return NextResponse.json({ error: "Cihaz bölgesi seçilmedi." }, { status: 400 });
 
+    const accessoryCostCodes = Array.isArray(body.accessoryCostCodes)
+      ? body.accessoryCostCodes.map((value: unknown) => String(value)).filter(Boolean).join(",")
+      : String(body.accessoryCostCode ?? "");
+
     const supabase = createPublicSupabaseClient();
     const { data, error } = await supabase.rpc("estimate_trade_in", {
       p_device_id: deviceId,
@@ -21,7 +25,7 @@ export async function POST(request: Request) {
       p_body: String(body.body ?? ""),
       p_battery: String(body.battery ?? ""),
       p_repair_cost_code: String(body.repairCostCode ?? ""),
-      p_accessory_cost_code: String(body.accessoryCostCode ?? ""),
+      p_accessory_cost_code: accessoryCostCodes,
     });
     if (error || !data?.length) return NextResponse.json({ error: "Bu cihaz için otomatik tahmin oluşturulamadı." }, { status: 404 });
 
