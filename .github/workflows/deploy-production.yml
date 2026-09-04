@@ -62,6 +62,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Type-check application
+        run: npx tsc --noEmit
+
       - name: Initialize Vinext Cloudflare build
         if: steps.vinext-cache.outputs.cache-hit != 'true'
         shell: bash
