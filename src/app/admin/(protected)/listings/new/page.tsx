@@ -13,11 +13,25 @@ export default async function NewListingPage({ searchParams }: NewListingPagePro
   const activeMode = mode === "manual" ? "manual" : "import";
   const { url, publishableKey } = getPublicSupabaseConfig();
   const supabase = await createSupabaseServerClient();
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id,name")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  const [{ data: categories }, { data: categoryBrands }] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("id,name,slug")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("category_brands")
+      .select("category_id,brand,sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("brand", { ascending: true }),
+  ]);
+
+  const brandCatalog: Record<string, string[]> = {};
+  for (const row of categoryBrands ?? []) {
+    if (!brandCatalog[row.category_id]) brandCatalog[row.category_id] = [];
+    brandCatalog[row.category_id].push(row.brand);
+  }
 
   return (
     <main className="adminShell">
@@ -26,20 +40,21 @@ export default async function NewListingPage({ searchParams }: NewListingPagePro
           <p className="eyebrow">TROVE YÖNETİM</p>
           <h1 className="adminPageTitle">Yeni İlan</h1>
         </div>
-        <Link className="adminTextLink" href="/admin">Panele dön</Link>
+        <Link className="adminTextLink" href="/admin" prefetch={false}>Panele dön</Link>
       </header>
 
       <div className="adminListingModeTabs" role="navigation" aria-label="İlan oluşturma yöntemi">
-        <Link className={activeMode === "import" ? "adminButton" : "adminButton adminButtonSecondary"} href="/admin/listings/new">Sahibinden'den getir</Link>
-        <Link className={activeMode === "manual" ? "adminButton" : "adminButton adminButtonSecondary"} href="/admin/listings/new?mode=manual">Manuel ilan oluştur</Link>
+        <Link className={activeMode === "import" ? "adminButton" : "adminButton adminButtonSecondary"} href="/admin/listings/new" prefetch={false}>Sahibinden'den getir</Link>
+        <Link className={activeMode === "manual" ? "adminButton" : "adminButton adminButtonSecondary"} href="/admin/listings/new?mode=manual" prefetch={false}>Manuel ilan oluştur</Link>
       </div>
 
       <section className="adminDashboardCard" style={{ marginTop: 18 }}>
         {activeMode === "manual" ? (
           <>
-            <p className="adminLead">Sahibinden'e girmeyeceğin ürünleri buradan doğrudan Trove'a ekle. Kaynak linki gerekmez; görsel, fiyat ve cihaz bilgilerini kendin gir.</p>
+            <p className="adminLead">Kategori seçimine göre marka kataloğu ve ürün alanları otomatik değişir. Telefon, giyilebilir teknoloji, laptop, oyun konsolu ve diğer ürün türlerinde yalnızca ilgili bilgiler gösterilir.</p>
             <ManualListingForm
-              categories={(categories ?? []).map((category) => ({ id: category.id, name: category.name }))}
+              brandCatalog={brandCatalog}
+              categories={(categories ?? []).map((category) => ({ id: category.id, name: category.name, slug: category.slug }))}
               supabasePublishableKey={publishableKey}
               supabaseUrl={url}
             />
