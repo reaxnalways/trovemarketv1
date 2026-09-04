@@ -6,6 +6,7 @@ export type PublicListing = {
   model: string | null;
   storage: string | null;
   price: number | null;
+  description: string | null;
   images: string[];
   stock_status: "in_stock" | "reserved" | "sold" | "out_of_stock";
   is_featured: boolean;
