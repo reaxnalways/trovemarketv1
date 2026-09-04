@@ -44,6 +44,10 @@ function validate(input: ScopedBulkInput) {
   if (input.scopeType === "selected_products" && !(input.productIds?.length)) throw new Error("En az bir ürün seç.");
 }
 
+function refreshScopedPricing() {
+  ["/", "/admin/pricing", "/admin/listings", "/takas", "/kategori/teknik-servis"].forEach((path) => revalidatePath(path));
+}
+
 export async function previewScopedBulk(input: ScopedBulkInput) {
   validate(input);
   const supabase = await adminClient();
@@ -57,7 +61,7 @@ export async function applyScopedBulk(input: ScopedBulkInput) {
   const supabase = await adminClient();
   const { data, error } = await supabase.rpc("apply_scoped_price_adjustment", rpcArgs(input));
   if (error) throw new Error(error.message || "Toplu fiyat işlemi uygulanamadı.");
-  ["/", "/admin/pricing", "/admin/listings", "/takas", "/kategori/teknik-servis"].forEach(revalidatePath);
+  refreshScopedPricing();
   return String(data);
 }
 
@@ -65,6 +69,6 @@ export async function rollbackScopedBulk(id: string) {
   const supabase = await adminClient();
   const { data, error } = await supabase.rpc("rollback_scoped_price_adjustment", { p_history_id: id });
   if (error || data !== true) throw new Error("Toplu fiyat işlemi geri alınamadı.");
-  ["/", "/admin/pricing", "/admin/listings", "/takas", "/kategori/teknik-servis"].forEach(revalidatePath);
+  refreshScopedPricing();
   return true;
 }
