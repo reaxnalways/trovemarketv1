@@ -62,14 +62,11 @@ export async function updateListing(formData: FormData) {
   const title = optional(formData.get("title"));
   if (!productId || !title) return;
 
-  const rawPrice = optional(formData.get("price"));
   const rawBattery = optional(formData.get("batteryHealth"));
-  const price = rawPrice === null ? null : Number(rawPrice.replace(",", "."));
   const batteryHealth = rawBattery === null ? null : Number(rawBattery);
   const deviceRegion = optional(formData.get("deviceRegion"));
   const intent = optional(formData.get("actionIntent"));
 
-  if (price !== null && (!Number.isFinite(price) || price < 0)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz fiyat.")}`);
   if (batteryHealth !== null && (!Number.isInteger(batteryHealth) || batteryHealth < 0 || batteryHealth > 100)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Pil sağlığı 0-100 arasında olmalıdır.")}`);
   if (deviceRegion !== null && !["tr", "passport", "international"].includes(deviceRegion)) redirect(`/admin/listings/${productId}?error=${encodeURIComponent("Geçersiz cihaz kayıt türü.")}`);
 
@@ -81,7 +78,6 @@ export async function updateListing(formData: FormData) {
     title,
     brand: optional(formData.get("brand")),
     model: optional(formData.get("model")),
-    price,
     condition: optional(formData.get("condition")),
     storage: optional(formData.get("storage")),
     color: optional(formData.get("color")),
