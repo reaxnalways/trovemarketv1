@@ -34,9 +34,7 @@ export async function updateScannedProduct(formData: FormData) {
   }
 
   const title = String(formData.get("title") ?? "").trim();
-  const rawPrice = String(formData.get("price") ?? "").trim().replace(",", ".");
   const rawBatteryHealth = String(formData.get("batteryHealth") ?? "").trim();
-  const price = rawPrice === "" ? null : Number(rawPrice);
   const batteryHealth = rawBatteryHealth === "" ? null : Number(rawBatteryHealth);
   const condition = String(formData.get("condition") ?? "");
   const deviceRegion = String(formData.get("deviceRegion") ?? "");
@@ -44,7 +42,6 @@ export async function updateScannedProduct(formData: FormData) {
   const publicationStatus = String(formData.get("publicationStatus") ?? "");
 
   if (title.length < 3) redirect(`/admin/scanner?code=${productCode}&error=${encodeURIComponent("Başlık en az 3 karakter olmalıdır.")}`);
-  if (price !== null && (!Number.isFinite(price) || price < 0)) redirect(`/admin/scanner?code=${productCode}&error=${encodeURIComponent("Fiyat geçersiz.")}`);
   if (batteryHealth !== null && (!Number.isInteger(batteryHealth) || batteryHealth < 0 || batteryHealth > 100)) redirect(`/admin/scanner?code=${productCode}&error=${encodeURIComponent("Pil sağlığı 0-100 arasında olmalıdır.")}`);
   if (!["", "new", "used", "refurbished"].includes(condition)) redirect(`/admin/scanner?code=${productCode}&error=${encodeURIComponent("Ürün durumu geçersiz.")}`);
   if (!["", "tr", "passport", "international"].includes(deviceRegion)) redirect(`/admin/scanner?code=${productCode}&error=${encodeURIComponent("Cihaz bölgesi geçersiz.")}`);
@@ -62,7 +59,6 @@ export async function updateScannedProduct(formData: FormData) {
       battery_health: batteryHealth,
       condition: condition || null,
       device_region: deviceRegion || null,
-      price,
       stock_status: stockStatus,
       publication_status: publicationStatus,
       updated_at: new Date().toISOString(),
