@@ -7,6 +7,7 @@ import { translateText } from "../../../modules/i18n/live-translation";
 import { listListingsByCategory } from "../../../modules/listings/repository";
 import { getPublicSiteSettings } from "../../../modules/settings/public-settings";
 import { listPublicServicePrices } from "../../../modules/technical-service/pricing";
+import { listPublicTradeInDevices } from "../../../modules/trade-in/catalog";
 import { CategoryListingsClient } from "./category-listings-client";
 import { ServiceOfferForm } from "./service-offer-form";
 import "./category-listings.css";
@@ -38,10 +39,10 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const t = dictionary(locale);
 
   if (category.slug === "teknik-servis") {
-    const rawPrices = await listPublicServicePrices();
+    const [rawPrices, devices] = await Promise.all([listPublicServicePrices(), listPublicTradeInDevices()]);
     const prices = await Promise.all(rawPrices.map(async (price) => ({ ...price, fault_label: await translateText(price.fault_label, locale) })));
     const digits = settings.whatsapp_number?.replace(/\D/g, "") ?? "";
-    return <><SiteHeader settings={settings} /><main className="shell tradePage serviceOfferPage"><Link className="backLink" href="/">← {t.home}</Link><header className="tradeIntro"><span className="tradeEyebrow">{t.serviceEyebrow}</span><h1>{t.serviceTitle}</h1><p>{t.serviceText}</p></header><ServiceOfferForm whatsappNumber={digits} prices={prices} locale={locale}/></main></>;
+    return <><SiteHeader settings={settings} /><main className="shell tradePage serviceOfferPage"><Link className="backLink" href="/">← {t.home}</Link><header className="tradeIntro"><span className="tradeEyebrow">{t.serviceEyebrow}</span><h1>{t.serviceTitle}</h1><p>{t.serviceText}</p></header><ServiceOfferForm whatsappNumber={digits} prices={prices} devices={devices} locale={locale}/></main></>;
   }
 
   const rawListings = await listListingsByCategory(category.id);
