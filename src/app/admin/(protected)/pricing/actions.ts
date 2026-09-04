@@ -16,7 +16,7 @@ function text(formData: FormData, key: string) { return String(formData.get(key)
 function parsePositiveNumber(value: FormDataEntryValue | null) { if (typeof value !== "string") return null; const parsed = Number(value.replace(",", ".")); return Number.isFinite(parsed) && parsed > 0 ? parsed : null; }
 function parseNumber(formData: FormData, key: string, min = 0) { const value = Number(text(formData, key).replace(",", ".")); if (!Number.isFinite(value) || value < min) throw new Error("Geçerli bir sayı gir."); return value; }
 function parseOptionalNumber(formData: FormData, key: string) { const raw = text(formData, key); if (!raw) return null; const value = Number(raw.replace(",", ".")); if (!Number.isFinite(value) || value < 0) throw new Error("Geçerli bir tutar gir."); return value; }
-function refreshPricing() { ["/","/admin/pricing","/admin/listings","/admin/trade-in","/admin/trade-in/costs","/admin/technical-service/prices","/takas","/kategori/teknik-servis"].forEach(revalidatePath); }
+function refreshPricing() { ["/","/admin/pricing","/admin/listings","/admin/trade-in","/admin/trade-in/costs","/admin/technical-service/prices","/takas","/kategori/teknik-servis"].forEach((path) => revalidatePath(path)); }
 
 export async function updateProductPrice(formData: FormData) {
   const id = text(formData, "id");
