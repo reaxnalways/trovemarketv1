@@ -80,6 +80,15 @@ export async function updateTradeInDevicePrice(formData: FormData) {
   refreshPricing();
 }
 
+export async function deleteTradeInDevicePrice(formData: FormData) {
+  const id = text(formData, "id");
+  if (!id) throw new Error("Takas cihazı kimliği eksik.");
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("trade_in_devices").delete().eq("id", id);
+  if (error) throw new Error("Takas cihazı silinemedi.");
+  refreshPricing();
+}
+
 export async function applyBulkPriceUpdate(formData: FormData) {
   const baseRate = parsePositiveNumber(formData.get("baseRate")); const targetRate = parsePositiveNumber(formData.get("targetRate")); const roundingStep = Number(formData.get("roundingStep")); const allowedRounding = [1,10,50,100,500,1000];
   if (!baseRate || !targetRate || !allowedRounding.includes(roundingStep)) redirect("/admin/pricing?error=" + encodeURIComponent("Kur veya yuvarlama değeri geçersiz."));
