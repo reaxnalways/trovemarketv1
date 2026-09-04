@@ -59,83 +59,21 @@ export default async function ScannerPage({ searchParams }: ScannerPageProps) {
           <div className="adminDashboardCard">
             <p><strong>Mevcut fiyat:</strong> {formatMoney(product.price)}</p>
             <p><strong>Barkod:</strong> {product.barcode || product.product_code}</p>
+            <p className="adminLead">Fiyat değişikliği yalnızca <Link href="/admin/pricing">Fiyat Yönetimi</Link> ekranından yapılır.</p>
 
             <form action={updateScannedProduct} className="adminListingForm" style={{ marginTop: 20 }}>
               <input name="productCode" type="hidden" value={product.product_code} />
 
-              <label className="adminField adminFieldWide">
-                Başlık
-                <input name="title" type="text" minLength={3} defaultValue={product.title} required />
-              </label>
-
-              <label className="adminField">
-                Marka
-                <input name="brand" type="text" defaultValue={product.brand ?? ""} />
-              </label>
-
-              <label className="adminField">
-                Model
-                <input name="model" type="text" defaultValue={product.model ?? ""} />
-              </label>
-
-              <label className="adminField">
-                Hafıza
-                <input name="storage" type="text" defaultValue={product.storage ?? ""} />
-              </label>
-
-              <label className="adminField">
-                Renk
-                <input name="color" type="text" defaultValue={product.color ?? ""} />
-              </label>
-
-              <label className="adminField">
-                Pil sağlığı (%)
-                <input name="batteryHealth" type="number" inputMode="numeric" min="0" max="100" step="1" defaultValue={product.battery_health ?? ""} />
-              </label>
-
-              <label className="adminField">
-                Ürün durumu
-                <select name="condition" defaultValue={product.condition ?? ""}>
-                  <option value="">Belirtilmedi</option>
-                  <option value="new">Sıfır</option>
-                  <option value="used">İkinci el</option>
-                  <option value="refurbished">Yenilenmiş</option>
-                </select>
-              </label>
-
-              <label className="adminField">
-                Cihaz bölgesi
-                <select name="deviceRegion" defaultValue={product.device_region ?? ""}>
-                  <option value="">Belirtilmedi</option>
-                  <option value="tr">TR cihaz</option>
-                  <option value="passport">Pasaport kayıtlı</option>
-                  <option value="international">Yurt dışı</option>
-                </select>
-              </label>
-
-              <label className="adminField">
-                Fiyat
-                <input name="price" type="number" inputMode="decimal" min="0" step="0.01" defaultValue={product.price == null ? "" : Number(product.price)} />
-              </label>
-
-              <label className="adminField">
-                Stok durumu
-                <select name="stockStatus" defaultValue={product.stock_status}>
-                  <option value="in_stock">Stokta</option>
-                  <option value="reserved">Rezerve</option>
-                  <option value="sold">Satıldı</option>
-                  <option value="out_of_stock">Stok dışı</option>
-                </select>
-              </label>
-
-              <label className="adminField">
-                Yayın durumu
-                <select name="publicationStatus" defaultValue={product.publication_status}>
-                  <option value="draft">Taslak</option>
-                  <option value="published">Yayında</option>
-                  <option value="hidden">Gizli</option>
-                </select>
-              </label>
+              <label className="adminField adminFieldWide">Başlık<input name="title" type="text" minLength={3} defaultValue={product.title} required /></label>
+              <label className="adminField">Marka<input name="brand" type="text" defaultValue={product.brand ?? ""} /></label>
+              <label className="adminField">Model<input name="model" type="text" defaultValue={product.model ?? ""} /></label>
+              <label className="adminField">Hafıza<input name="storage" type="text" defaultValue={product.storage ?? ""} /></label>
+              <label className="adminField">Renk<input name="color" type="text" defaultValue={product.color ?? ""} /></label>
+              <label className="adminField">Pil sağlığı (%)<input name="batteryHealth" type="number" inputMode="numeric" min="0" max="100" step="1" defaultValue={product.battery_health ?? ""} /></label>
+              <label className="adminField">Ürün durumu<select name="condition" defaultValue={product.condition ?? ""}><option value="">Belirtilmedi</option><option value="new">Sıfır</option><option value="used">İkinci el</option><option value="refurbished">Yenilenmiş</option></select></label>
+              <label className="adminField">Cihaz bölgesi<select name="deviceRegion" defaultValue={product.device_region ?? ""}><option value="">Belirtilmedi</option><option value="tr">TR cihaz</option><option value="passport">Pasaport kayıtlı</option><option value="international">Yurt dışı</option></select></label>
+              <label className="adminField">Stok durumu<select name="stockStatus" defaultValue={product.stock_status}><option value="in_stock">Stokta</option><option value="reserved">Rezerve</option><option value="sold">Satıldı</option><option value="out_of_stock">Stok dışı</option></select></label>
+              <label className="adminField">Yayın durumu<select name="publicationStatus" defaultValue={product.publication_status}><option value="draft">Taslak</option><option value="published">Yayında</option><option value="hidden">Gizli</option></select></label>
 
               <div className="adminFormActions adminFieldWide" style={{ gap: 10, flexWrap: "wrap" }}>
                 <button className="adminButton" type="submit">Değişiklikleri kaydet</button>
