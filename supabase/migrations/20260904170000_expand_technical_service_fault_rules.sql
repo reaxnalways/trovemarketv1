@@ -40,5 +40,4 @@ language sql stable security definer set search_path to '' as $$
   where r.is_active=true and r.service_fault_code is not null and r.service_pct>0
   order by r.sort_order,r.label
 $$;
-revoke all on function public.get_service_price_catalog() from public;
 grant execute on function public.get_service_price_catalog() to anon,authenticated;
