@@ -22,9 +22,9 @@ export default async function AdminListingsPage({ searchParams }: Props) {
       <div className="adminPageHeader">
         <div><h1 className="adminPageTitle">Ürünler</h1></div>
         <div className="adminTopbarActions">
-          <Link className="adminButton adminButtonSecondary" href="/" target="_blank">Ana sayfa</Link>
-          <Link className="adminButton adminButtonSecondary" href="/admin/scan">Barkod tara</Link>
-          <Link className="adminButton adminActionLink" href="/admin/listings/new">Yeni ürün</Link>
+          <Link prefetch={false} className="adminButton adminButtonSecondary" href="/" target="_blank">Ana sayfa</Link>
+          <Link prefetch={false} className="adminButton adminButtonSecondary" href="/admin/scan">Barkod tara</Link>
+          <Link prefetch={false} className="adminButton adminActionLink" href="/admin/listings/new">Yeni ürün</Link>
         </div>
       </div>
 
@@ -36,7 +36,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         <label className="adminField">Yayın<select name="publication" defaultValue={publication ?? ""}><option value="">Tümü</option><option value="published">Yayında</option><option value="draft">Taslak</option><option value="hidden">Gizli</option></select></label>
         <label className="adminField">Stok<select name="stock" defaultValue={stock ?? ""}><option value="">Tümü</option><option value="in_stock">Stokta</option><option value="reserved">Rezerve</option><option value="sold">Satıldı</option><option value="out_of_stock">Stok dışı</option></select></label>
         <button className="adminButton" type="submit">Uygula</button>
-        <Link className="adminButton adminButtonSecondary" href="/admin/listings">Temizle</Link>
+        <Link prefetch={false} className="adminButton adminButtonSecondary" href="/admin/listings">Temizle</Link>
       </form>
 
       <div className="adminToolbar"><span>{count ?? products?.length ?? 0} ürün</span></div>
@@ -45,7 +45,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
           <article className="adminProductRow" key={product.id}>
             <div className="adminProductMain">
               <span className="productCode">{product.product_code}</span>
-              <Link className="adminProductTitleLink" href={`/admin/listings/${product.id}`}>{product.title}</Link>
+              <Link prefetch={false} className="adminProductTitleLink" href={`/admin/listings/${product.id}`}>{product.title}</Link>
               <small>{[product.brand, product.model].filter(Boolean).join(" · ") || "Ürün bilgisi"}</small>
             </div>
             <div className="adminProductMeta">
@@ -55,8 +55,8 @@ export default async function AdminListingsPage({ searchParams }: Props) {
               {product.is_featured ? <span>Öne çıkan</span> : null}
             </div>
             <div className="adminInlineActions">
-              <Link className="adminButton adminButtonSecondary" href={`/admin/listings/${product.id}`}>Düzenle</Link>
-              {product.publication_status === "published" ? <Link className="adminButton adminButtonSecondary" href={`/ilan/${product.product_code}`} target="_blank">Sitede gör</Link> : null}
+              <Link prefetch={false} className="adminButton adminButtonSecondary" href={`/admin/listings/${product.id}`}>Düzenle</Link>
+              {product.publication_status === "published" ? <Link prefetch={false} className="adminButton adminButtonSecondary" href={`/ilan/${product.product_code}`} target="_blank">Sitede gör</Link> : null}
               <form action={updateListingStatus} className="adminInlineActions">
                 <input type="hidden" name="productId" value={product.id} />
                 <button name="action" value={product.publication_status === "published" ? "hide" : "publish"} className="adminButton adminButtonSecondary" type="submit">{product.publication_status === "published" ? "Gizle" : "Yayınla"}</button>
