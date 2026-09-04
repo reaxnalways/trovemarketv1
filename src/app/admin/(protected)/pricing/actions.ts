@@ -16,14 +16,76 @@ function text(formData: FormData, key: string) { return String(formData.get(key)
 function parsePositiveNumber(value: FormDataEntryValue | null) { if (typeof value !== "string") return null; const parsed = Number(value.replace(",", ".")); return Number.isFinite(parsed) && parsed > 0 ? parsed : null; }
 function parseNumber(formData: FormData, key: string, min = 0) { const value = Number(text(formData, key).replace(",", ".")); if (!Number.isFinite(value) || value < min) throw new Error("Geçerli bir sayı gir."); return value; }
 function parseOptionalNumber(formData: FormData, key: string) { const raw = text(formData, key); if (!raw) return null; const value = Number(raw.replace(",", ".")); if (!Number.isFinite(value) || value < 0) throw new Error("Geçerli bir tutar gir."); return value; }
-function refreshPricing() { ["/admin/pricing","/admin/trade-in","/admin/trade-in/costs","/admin/technical-service/prices","/takas","/kategori/teknik-servis"].forEach(revalidatePath); }
+function refreshPricing() { ["/","/admin/pricing","/admin/listings","/admin/trade-in","/admin/trade-in/costs","/admin/technical-service/prices","/takas","/kategori/teknik-servis"].forEach(revalidatePath); }
+
+export async function updateProductPrice(formData: FormData) {
+  const id = text(formData, "id");
+  if (!id) throw new Error("Ürün kimliği eksik.");
+  const price = parseOptionalNumber(formData, "price");
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("products").update({ price, updated_at: new Date().toISOString() }).eq("id", id);
+  if (error) throw new Error("Ürün fiyatı güncellenemedi.");
+  refreshPricing();
+}
+
+export async function createTradeInDevicePrice(formData: FormData) {
+  const deviceType = text(formData, "deviceType");
+  const brand = text(formData, "brand");
+  const model = text(formData, "model");
+  if (!deviceType || !brand || !model) throw new Error("Cihaz türü, marka ve model zorunludur.");
+  const tr = parseNumber(formData, "marketPriceTr");
+  const passport = parseNumber(formData, "marketPricePassport");
+  const international = parseNumber(formData, "marketPriceInternational");
+  const margin = parseNumber(formData, "profitMarginPct");
+  if (margin > 60) throw new Error("Kâr marjı %60'tan büyük olamaz.");
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("trade_in_devices").insert({
+    device_type: deviceType,
+    brand,
+    model,
+    storage: text(formData, "storage"),
+    base_estimate: tr,
+    min_estimate: 0,
+    max_estimate: Math.max(tr, passport, international),
+    market_price_tr: tr,
+    market_price_passport: passport,
+    market_price_international: international,
+    profit_margin_pct: margin,
+    is_active: true,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw new Error(error.code === "23505" ? "Bu cihaz/varyant zaten listede." : "Takas cihazı eklenemedi.");
+  refreshPricing();
+}
+
+export async function updateTradeInDevicePrice(formData: FormData) {
+  const id = text(formData, "id");
+  if (!id) throw new Error("Takas cihazı kimliği eksik.");
+  const tr = parseNumber(formData, "marketPriceTr");
+  const passport = parseNumber(formData, "marketPricePassport");
+  const international = parseNumber(formData, "marketPriceInternational");
+  const margin = parseNumber(formData, "profitMarginPct");
+  if (margin > 60) throw new Error("Kâr marjı %60'tan büyük olamaz.");
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("trade_in_devices").update({
+    market_price_tr: tr,
+    market_price_passport: passport,
+    market_price_international: international,
+    base_estimate: tr,
+    max_estimate: Math.max(tr, passport, international),
+    profit_margin_pct: margin,
+    updated_at: new Date().toISOString(),
+  }).eq("id", id);
+  if (error) throw new Error("Takas cihazı fiyatları güncellenemedi.");
+  refreshPricing();
+}
 
 export async function applyBulkPriceUpdate(formData: FormData) {
   const baseRate = parsePositiveNumber(formData.get("baseRate")); const targetRate = parsePositiveNumber(formData.get("targetRate")); const roundingStep = Number(formData.get("roundingStep")); const allowedRounding = [1,10,50,100,500,1000];
   if (!baseRate || !targetRate || !allowedRounding.includes(roundingStep)) redirect("/admin/pricing?error=" + encodeURIComponent("Kur veya yuvarlama değeri geçersiz."));
   const supabase = await requireAdmin(); const { data, error } = await supabase.rpc("bulk_reindex_all_prices", { p_base_rate: baseRate, p_target_rate: targetRate, p_rounding_step: roundingStep });
   if (error) redirect("/admin/pricing?error=" + encodeURIComponent("Toplu fiyat güncellemesi başarısız oldu."));
-  revalidatePath("/"); refreshPricing(); revalidatePath("/admin/listings");
+  refreshPricing();
   redirect(`/admin/pricing?updated=${Number(data ?? 0)}&rate=${encodeURIComponent(String(targetRate))}`);
 }
 
