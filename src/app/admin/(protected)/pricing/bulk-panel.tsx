@@ -1,27 +1,34 @@
-import { applyBulkPriceUpdate, applyHybridBulkAdjustment, rollbackHybridBulkAdjustment } from "./actions";
+import { applyBulkPriceUpdate, rollbackHybridBulkAdjustment } from "./actions";
+import { ScopedBulkClient } from "./scoped-bulk-client";
 import styles from "./pricing-lists.module.css";
 
 type HybridHistory = { id: string; target: string; percentage: number | string; rule_count: number; override_count: number; created_at: string; rolled_back_at: string | null };
 type FxHistory = { id: string; base_rate: number | string; target_rate: number | string; affected_count: number; product_count: number; trade_in_device_count: number; cost_reference_count: number; service_reference_count: number; created_at: string };
+type Category = { id: string; name: string };
+type Product = { id: string; product_code: string; title: string; brand: string | null; model: string | null; category_id: string | null; price: number | string | null; publication_status: string; stock_status: string };
+type ScopedHistory = { id: string; scope_type: string; brand: string | null; model: string | null; targets: string[]; percentage: number | string; affected_counts: Record<string, number>; created_at: string; rolled_back_at: string | null };
 
-export function BulkPanel({ savedRate, baseRate, targetRate, roundingStep, hybridHistory, history }: { savedRate: number | null; baseRate: number | null; targetRate: number | null; roundingStep: number; hybridHistory: HybridHistory[]; history: FxHistory[] }) {
+type Props = {
+  savedRate: number | null;
+  baseRate: number | null;
+  targetRate: number | null;
+  roundingStep: number;
+  hybridHistory: HybridHistory[];
+  history: FxHistory[];
+  categories: Category[];
+  products: Product[];
+  scopedHistory: ScopedHistory[];
+};
+
+export function BulkPanel({ savedRate, baseRate, targetRate, roundingStep, hybridHistory, history, categories, products, scopedHistory }: Props) {
   return (
-    <section className={styles.panel}>
-      <div className={styles.headingRow}><div><h2>Toplu İşlemler</h2><p>Sık kullanılan toplu fiyat işlemleri tek ekranda.</p></div></div>
+    <>
+      <ScopedBulkClient categories={categories} products={products} history={scopedHistory} />
 
-      <div className={styles.bulkGrid}>
+      <section className={styles.panel} style={{ marginTop: 16 }}>
+        <div className={styles.headingRow}><div><h2>Kur bazlı güncelleme</h2><p>USD bazlı kayıtları kur değişimine göre ayrıca güncelle.</p></div></div>
         <div className={styles.subPanel}>
-          <div className={styles.subHeading}><strong>Servis / takas zam & indirim</strong><small>Katsayıları yüzdeyle toplu değiştir.</small></div>
-          <form action={applyHybridBulkAdjustment} className={styles.compactForm}>
-            <label>Hedef<select name="target" defaultValue="all"><option value="all">Servis + Takas</option><option value="service">Sadece servis</option><option value="trade_in">Sadece takas</option></select></label>
-            <label>Oran %<input name="percentage" inputMode="decimal" required placeholder="10 / -10" /></label>
-            <label className={styles.checkField}><input type="checkbox" name="includeOverrides" /> Açık istisnaları dahil et</label>
-            <button className="adminButton" type="submit">Uygula</button>
-          </form>
-        </div>
-
-        <div className={styles.subPanel}>
-          <div className={styles.subHeading}><strong>Kur bazlı güncelleme</strong><small>Mevcut kur: {savedRate ? savedRate.toLocaleString("tr-TR") : "Tanımlı değil"}</small></div>
+          <div className={styles.subHeading}><strong>Kur güncellemesi</strong><small>Mevcut kur: {savedRate ? savedRate.toLocaleString("tr-TR") : "Tanımlı değil"}</small></div>
           <form action="/admin/pricing" method="get" className={styles.compactForm}>
             <input type="hidden" name="view" value="bulk" />
             <label>Baz USD/TRY<input name="base" inputMode="decimal" required defaultValue={baseRate ?? ""} /></label>
@@ -39,29 +46,29 @@ export function BulkPanel({ savedRate, baseRate, targetRate, roundingStep, hybri
             </form>
           ) : null}
         </div>
-      </div>
 
-      <div className={styles.historyGrid}>
-        <details className={styles.subPanel}>
-          <summary className={styles.historySummary}>Katsayı geçmişi <span>{hybridHistory.length}</span></summary>
-          {hybridHistory.length ? <div className={styles.list}>{hybridHistory.map((item) => (
-            <div className={styles.row} key={item.id}>
-              <div className={styles.identity}><strong>{item.target === "all" ? "Servis + Takas" : item.target === "service" ? "Servis" : "Takas"} · {Number(item.percentage) > 0 ? "+" : ""}{Number(item.percentage)}%</strong><small>{new Date(item.created_at).toLocaleString("tr-TR")} · {item.rule_count} kural · {item.override_count} istisna</small></div>
-              <div className={styles.actions}>{item.rolled_back_at ? <span className={styles.muted}>Geri alındı</span> : <form action={rollbackHybridBulkAdjustment}><input type="hidden" name="id" value={item.id} /><button className="adminButton adminButtonSecondary" type="submit">Geri al</button></form>}</div>
-            </div>
-          ))}</div> : <p className={styles.empty}>Henüz toplu katsayı işlemi yok.</p>}
-        </details>
+        <div className={styles.historyGrid} style={{ marginTop: 14 }}>
+          <details className={styles.subPanel}>
+            <summary className={styles.historySummary}>Eski katsayı geçmişi <span>{hybridHistory.length}</span></summary>
+            {hybridHistory.length ? <div className={styles.list}>{hybridHistory.map((item) => (
+              <div className={styles.row} key={item.id}>
+                <div className={styles.identity}><strong>{item.target === "all" ? "Servis + Takas" : item.target === "service" ? "Servis" : "Takas"} · {Number(item.percentage) > 0 ? "+" : ""}{Number(item.percentage)}%</strong><small>{new Date(item.created_at).toLocaleString("tr-TR")} · {item.rule_count} kural · {item.override_count} istisna</small></div>
+                <div className={styles.actions}>{item.rolled_back_at ? <span className={styles.muted}>Geri alındı</span> : <form action={rollbackHybridBulkAdjustment}><input type="hidden" name="id" value={item.id} /><button className="adminButton adminButtonSecondary" type="submit">Geri al</button></form>}</div>
+              </div>
+            ))}</div> : <p className={styles.empty}>Eski katsayı işlemi yok.</p>}
+          </details>
 
-        <details className={styles.subPanel}>
-          <summary className={styles.historySummary}>Kur geçmişi <span>{history.length}</span></summary>
-          {history.length ? <div className={styles.list}>{history.map((item) => (
-            <div className={styles.row} key={item.id}>
-              <div className={styles.identity}><strong>{Number(item.base_rate).toLocaleString("tr-TR")} → {Number(item.target_rate).toLocaleString("tr-TR")}</strong><small>{new Date(item.created_at).toLocaleString("tr-TR")} · {item.affected_count} kayıt</small></div>
-              <div className={styles.historyCounts}><span>Ürün {item.product_count}</span><span>Takas {item.trade_in_device_count}</span><span>Servis {item.service_reference_count}</span></div>
-            </div>
-          ))}</div> : <p className={styles.empty}>Henüz kur güncellemesi yok.</p>}
-        </details>
-      </div>
-    </section>
+          <details className={styles.subPanel}>
+            <summary className={styles.historySummary}>Kur geçmişi <span>{history.length}</span></summary>
+            {history.length ? <div className={styles.list}>{history.map((item) => (
+              <div className={styles.row} key={item.id}>
+                <div className={styles.identity}><strong>{Number(item.base_rate).toLocaleString("tr-TR")} → {Number(item.target_rate).toLocaleString("tr-TR")}</strong><small>{new Date(item.created_at).toLocaleString("tr-TR")} · {item.affected_count} kayıt</small></div>
+                <div className={styles.historyCounts}><span>Ürün {item.product_count}</span><span>Takas {item.trade_in_device_count}</span><span>Servis {item.service_reference_count}</span></div>
+              </div>
+            ))}</div> : <p className={styles.empty}>Henüz kur güncellemesi yok.</p>}
+          </details>
+        </div>
+      </section>
+    </>
   );
 }
