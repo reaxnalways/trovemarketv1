@@ -3,7 +3,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-import { createManualListing } from "./actions";
 
 type CategoryOption = { id: string; name: string };
 
@@ -86,24 +85,35 @@ export function ManualListingForm({ categories, supabaseUrl, supabasePublishable
       }
 
       setStatus("İlan kaydediliyor...");
-      const created = await createManualListing({
-        categoryId: String(form.get("categoryId") ?? ""),
-        title: String(form.get("title") ?? ""),
-        brand: String(form.get("brand") ?? ""),
-        model: String(form.get("model") ?? ""),
-        price: String(form.get("price") ?? ""),
-        condition: String(form.get("condition") ?? ""),
-        storage: String(form.get("storage") ?? ""),
-        color: String(form.get("color") ?? ""),
-        batteryHealth: String(form.get("batteryHealth") ?? ""),
-        deviceRegion: String(form.get("deviceRegion") ?? ""),
-        description: String(form.get("description") ?? ""),
-        publicationStatus: String(form.get("publicationStatus") ?? "draft"),
-        isFeatured: form.get("isFeatured") === "on",
-        images: imageUrls,
+      const response = await fetch("/api/admin/listings", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categoryId: String(form.get("categoryId") ?? ""),
+          title: String(form.get("title") ?? ""),
+          brand: String(form.get("brand") ?? ""),
+          model: String(form.get("model") ?? ""),
+          price: String(form.get("price") ?? ""),
+          condition: String(form.get("condition") ?? ""),
+          storage: String(form.get("storage") ?? ""),
+          color: String(form.get("color") ?? ""),
+          batteryHealth: String(form.get("batteryHealth") ?? ""),
+          deviceRegion: String(form.get("deviceRegion") ?? ""),
+          description: String(form.get("description") ?? ""),
+          publicationStatus: String(form.get("publicationStatus") ?? "draft"),
+          isFeatured: form.get("isFeatured") === "on",
+          images: imageUrls,
+        }),
       });
+
+      const result = await response.json().catch(() => null) as { ok?: boolean; id?: string; error?: string } | null;
+      if (!response.ok || !result?.ok || !result.id) {
+        throw new Error(result?.error ?? `İlan kaydedilemedi. Sunucu kodu: ${response.status}`);
+      }
+
       setStatus("İlan oluşturuldu, ürün açılıyor...");
-      router.push(`/admin/listings/${created.id}?created=1`);
+      router.push(`/admin/listings/${result.id}?created=1`);
       router.refresh();
     } catch (caught) {
       setBusy(false);
