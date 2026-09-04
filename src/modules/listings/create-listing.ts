@@ -12,6 +12,7 @@ export type DraftListingInput = {
   description?: string;
   sourceUrl?: string;
   images?: string[];
+  attributes?: Record<string, string>;
 };
 
 export type DraftListingRecord = {
@@ -28,6 +29,7 @@ export type DraftListingRecord = {
   description: string | null;
   source_url: string | null;
   images: string[];
+  attributes: Record<string, string>;
   stock_status: "in_stock";
   publication_status: "draft";
 };
@@ -54,6 +56,14 @@ function parsePrice(value: string | undefined): number | null {
 
 function normalizeImages(images: string[] | undefined): string[] {
   return (images ?? []).map((image) => image.trim()).filter(Boolean);
+}
+
+function normalizeAttributes(attributes: Record<string, string> | undefined): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(attributes ?? {})
+      .map(([key, value]) => [key.trim(), String(value).trim()] as const)
+      .filter(([key, value]) => key && value),
+  );
 }
 
 export function buildDraftListing(input: DraftListingInput): DraftListingRecord {
@@ -92,6 +102,7 @@ export function buildDraftListing(input: DraftListingInput): DraftListingRecord 
     description: optionalText(input.description),
     source_url: optionalText(input.sourceUrl),
     images: normalizeImages(input.images),
+    attributes: normalizeAttributes(input.attributes),
     stock_status: "in_stock",
     publication_status: "draft",
   };
