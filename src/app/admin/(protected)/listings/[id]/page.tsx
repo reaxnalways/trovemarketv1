@@ -17,6 +17,11 @@ const quickMessages: Record<string, string> = {
   published: "Ürün yayına alındı.",
 };
 
+function formatMoney(value: number | string | null) {
+  if (value == null) return "Belirtilmedi";
+  return `${Number(value).toLocaleString("tr-TR")} ₺`;
+}
+
 export default async function AdminListingEditPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { saved, created, published, quick, error } = await searchParams;
@@ -63,7 +68,9 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
           <span>Barkod: {product.barcode || product.product_code}</span>
           <span>Yayın: {product.publication_status}</span>
           <span>Stok: {product.stock_status}</span>
+          <span>Fiyat: {formatMoney(product.price)}</span>
         </div>
+        <p className="adminLead" style={{ marginTop: 12 }}>Fiyat değişiklikleri yalnızca <Link href="/admin/pricing">Fiyat Yönetimi</Link> ekranından yapılır.</p>
       </section>
 
       <ProductImageManager
@@ -79,7 +86,6 @@ export default async function AdminListingEditPage({ params, searchParams }: Pro
           <label className="adminField adminFieldWide">Başlık<input name="title" defaultValue={product.title} required /></label>
           <label className="adminField">Marka<input name="brand" defaultValue={product.brand ?? ""} /></label>
           <label className="adminField">Model<input name="model" defaultValue={product.model ?? ""} /></label>
-          <label className="adminField">Fiyat<input name="price" inputMode="decimal" defaultValue={product.price ?? ""} /></label>
           <label className="adminField">Durum<select name="condition" defaultValue={product.condition ?? ""}><option value="">Belirtilmedi</option><option value="new">Sıfır</option><option value="used">İkinci el</option><option value="refurbished">Yenilenmiş</option></select></label>
           <label className="adminField">Hafıza<input name="storage" defaultValue={product.storage ?? ""} /></label>
           <label className="adminField">Renk<input name="color" defaultValue={product.color ?? ""} /></label>
