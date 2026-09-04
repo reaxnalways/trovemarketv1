@@ -44,16 +44,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+
+      - name: Restore prepared Vinext environment
+        id: vinext-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            vite.config.ts
+            wrangler.jsonc
+          key: vinext-bootstrap-v1-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-beta.6
 
       - name: Install application dependencies
+        if: steps.vinext-cache.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Test
         run: npm test
 
       - name: Initialize Vinext Cloudflare build
+        if: steps.vinext-cache.outputs.cache-hit != 'true'
         shell: bash
+        env:
+          npm_config_audit: "false"
+          npm_config_fund: "false"
+          npm_config_prefer_offline: "true"
+          npm_config_progress: "false"
         run: |
           npx --yes vinext@1.0.0-beta.6 init \
             --skip-check \
