@@ -9,8 +9,8 @@ export async function POST(request:Request){
   const deviceType=String(body.deviceType??"").trim();
   const brand=String(body.brand??"").trim();
   const model=String(body.model??"").trim();
-  const raw=Array.isArray(body.faultCodes)?body.faultCodes.map(String).filter(Boolean):[];
-  const faultCodes=Array.from(new Set(raw.map(code=>LEGACY_FAULT_MAP[code]??code)));
+  const raw:string[]=Array.isArray(body.faultCodes)?body.faultCodes.map((value:unknown)=>String(value)).filter(Boolean):[];
+  const faultCodes=Array.from(new Set(raw.map((code:string)=>LEGACY_FAULT_MAP[code]??code)));
   if(!deviceType||!brand||!model||!faultCodes.length)return NextResponse.json({error:"Cihaz, marka, model ve arıza seçimi gerekli."},{status:400});
   const supabase=createPublicSupabaseClient();
   const{data,error}=await supabase.rpc("estimate_service_price",{p_device_type:deviceType,p_brand:brand,p_model:model,p_fault_codes:faultCodes});
